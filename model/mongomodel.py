@@ -14,30 +14,35 @@ def insertMongo(twitterResponseJSON, trendId, db):
     return ret
 
 def addTweet(tweetJSON, trendId, db):
-    if(tweetDNE(tweenJSON, db)):
-        tweetReady = parseTweet(tweetJSON)
+    tweet = fetchTweet(tweetJSON, trendId, db)
+    if(tweet==null):
+    #if(tweetDNE(tweenJSON, db)):
+        newtweet = parseTweet(tweetJSON)
+        newtweet['trend_id']=trendId #this is a list-correct this.
         tweets = db.tweets
-        tweets.insert(tweetReady)
+        tweets.insert(newtweet)
         print "Adding tweet for trend:", trendId
-        logtweet(tweetReady)
-        return tweetReady['str']
+        logtweet(newtweet)
+        return newtweet['text']
     else:
-        tweetReady = fetchTweet(tweetJSON, trendId, db)
+        #tweetReady = fetchTweet(tweetJSON, trendId, db)
         #Add log for fetchedTweet in fetchTweet
-        return tweetReady['str']
+        return tweet['text']
 
 def addUser(tweetJSON, trendId, db):
+    user = fetchUser(tweetJSON, trendId, db)
     if(userDNE(tweetJSON, db)):
-        userReady = parseUser(tweetJSON)
+        newuser = parseUser(tweetJSON)
+        newuser['trend_id']=trendId #this is a list, correct this
         users = db.users
-        users.insert(userReady)
+        users.insert(newuser)
         print "Adding user for trend", trendId
-        loguser(userReady)
-        return userReady['name']
+        loguser(newuser)
+        return newuser['name']
     else:
-        userReady = fetchUser(tweetJSON, trendId, db)
+        #userReady = fetchUser(tweetJSON, trendId, db)
         # loguser({"user":userReady['id'],"alreadyExists":"true"}) --should go in fetchUser
-        return userReady['name']
+        return user['name']
 
 def addTrend(trend, db):
     if(trendDNE(trend, db)):
@@ -57,38 +62,86 @@ def addTrend(trend, db):
     return trend
 
 # TWEET OPS
+# Tweet obj:
+#     * user_id
+#     * text
+#     * id_str
+#     * lang
+#     * geo,coordinates,place
+#     * created_at
+#     * trend_id
 
 def parseTweet(tweetJSON):
     #TODO
+    parsedTweet = {};
+    parsedTweet['text'] = tweetJSON['text']
+    parsedTweet['_id'] = tweetJSON['id_str']
+    parsedTweet['lang'] = tweetJSON['lang']
+    if tweetJSON['geo'] == null:
+        parsedTweet['loc'] = tweetJSON['user']['location']
+    else:
+        parsedTweet['loc'] = tweetJSON['geo']
+    parsedTweet['created_at'] = tweetJSON['created_at']
     return parsedTweet
-
-def tweetDNE(tweetJSON, db):
-    #separated to be implemeted as fast as possible
-    return False
 
 def fetchTweet(tweetJSON, trendId, db):
     # log refetching
+    tweetId = tweetJSON['id_str']
+    tweets=db.tweets
+    tweet = tweets.find_one({'_id':tweetId})
     return tweet
 
 # USER OPS
+# User obj:
+#     * id_str
+#     * location
+#     * name
+#     * screen_name
+#     * trend_ids []
 
 def parseUser(tweetJSON):
+    parsedUser = {}
+    parsedUser['_id']=tweetJSON['user']['id']
+    parsedUser['loc']=tweetJSON['user']['location']
+    parsedUser['name']=tweetJSON['user']['name']
+    parsedUser['handle']=tweetJSON['user']['screen_name']
     return parsedUser
-
-def userDNE(tweetJSON, db):
-    #separated to be implemeted as fast as possible
-    return False
 
 def fetchUser(tweetJSON, trendId, db):
     # log refetching
+    userId=tweetJSON['user']['id']
+    users=db.users
+    user = users.find_one({'_id':userId})
     return user
 
 # TREND OPS
 
-def trendDNE(trend, db):
-    #separated to be implemeted as fast as possible
-    return False
-
 def fetchTrend(trend, db):
     #log refetching
     return trend
+
+
+#===deprecated===
+# def trendDNE(trend, db):
+#     #separated to be implemeted as fast as possible
+#     return False
+
+# def tweetDNE(tweetJSON, db):
+#     #separated to be implemeted as fast as possible
+#     tweetId = tweetJSON['id_str']
+#     tweets=db.tweets
+#     tweet = tweets.find_one({'_id':tweetId})
+#     if(tweet==null):
+#         return False
+#     else:
+#         return True
+
+# def userDNE(tweetJSON, db):
+#     #separated to be implemeted as fast as possible
+#     userId=tweetJSON['user']['id']
+#     users=db.users
+#     user = users.find_one({'_id':userId})
+#     if(user==null):
+#         return False
+#     else:
+#         return True
