@@ -99,7 +99,12 @@ def seenForTrend(jsonModel,trendId):
 def parseTweet(tweetJSON):
     #TODO
     parsedTweet = {};
-    parsedTweet['text'] = tweetJSON['text']
+    tweet_text=tweetJSON['text']
+    parsedTweet['text'] = tweet_text
+
+    tokenizedTweet=processTweetText(tweet_text)
+    parsedTweet['tokens']=tokenizedTweet
+
     parsedTweet['_id'] = tweetJSON['id_str']
     parsedTweet['lang'] = tweetJSON['lang']
     if tweetJSON['geo'] == "":
