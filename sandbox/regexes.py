@@ -36,6 +36,6 @@ def every_url(urls):
 
 
 if __name__ == '__main__':
-    print "[^\s`!()\[\]{};:'\".,<>?«»“”‘’]"
+    #print "[^\s`!()\[\]{};:'\".,<>?«»“”‘’]"
     #matchPunctGt2("        aa    sds  ewrw          ")
     every_url(["asdasdas","http://daringfireball.net/2010/07/improved_regex_for_matching_urls","http://goo.gl/qwIwus","http://goo.gl/Y95sdJ","http://tcrn.ch/1rH7Fkx  by @alex","pic.twitter.com/3dE4SFgUmT","bit.ly/foo","is.gd/foo/","1. amazing fit  @TBdressClub dress=>http://goo.gl/qwIwus        shoes=>htt"])
