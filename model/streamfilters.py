@@ -6,18 +6,6 @@ import sys
 import os
 from unidecode import unidecode
 
-    # tweet = tweet.lower()
-    # #Convert www.* or https?://* to URL
-    # tweet = re.sub('((www\.[\s]+)|(https?://[^\s]+))','URL',tweet)
-    # #Convert @username to AT_USER
-    # tweet = re.sub('@[^\s]+','AT_USER',tweet)
-    # #Remove additional white spaces
-    # tweet = re.sub('[\s]+', ' ', tweet)
-    # #Replace #word with word
-    # tweet = re.sub(r'#([^\s]+)', r'\1', tweet)
-    # #trim
-    # tweet = tweet.strip('\'"')
-
 #===============ENCODE===============
 def encodeStream(tweet):
     #tweet=unicode(tweet,'utf-8')
@@ -29,7 +17,8 @@ def encodeStream(tweet):
 
 #===============CLEANSING===============
 def removeUrl(tweet):
-    tweet=re.sub('((www\.[\s]+)|(https?://[^\s]+))','',tweet)
+    urlpat=re.compile(r"(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))")
+    tweet = re.sub(urlpat, '', tweet)
     return tweet
 
 def removeMentions(tweet):
@@ -42,28 +31,26 @@ def removeHashtags(tweet):
 
 
 #===============TRIMMING===============
-def removeWhitespace(tweet):
-    tweet = re.sub('[\s]+', ' ', tweet)
-    return tweet
-
-def removePunctuation(tweet):
-    tweet=tweet.strip('\'"')
-    tweet=tweet.strip('\'"?,.')
-    tweet=tweet.strip('/')
+def removeMetaPunct(tweet):
+    tweet=re.sub('[^a-zA-Z0-9]+',' ',tweet)
     return tweet
 
 def replaceRepeats_gt2(tweet_tokens):
-    pattern=re.compile(r"(.)\1{1,}", re.DOTALL)
-    for t in tweet_tokens:
-        t=pattern.sub(r"\1\1", t)
-    return tweet_tokens
+    replacedTokens=[]
+    pat = re.compile(r"(.)\1{2,}", re.DOTALL)
+    subspat = r"\1\1"
+    for token in tweet_tokens:
+        replacedTokens.append(re.sub(pat, subspat, token))
+    return replacedTokens
 
-def cleanMetachars(tweet):
-    return tweet
+def trimTweet(tweet):
+    return tweet.strip()
+
 
 #===============TOKENIZATION===============
-def tokenizetweet(tweet):
+def tokenizeTweet(tweet):
     return [t for t in tweet.split(' ') if t is not '']
+
 
 #===============STOPWORDS===============
 def getAllStopwords():
@@ -75,6 +62,7 @@ def removeStopWords(tweet_tokens):
     after_stopwords=[tok for tok in tweet_tokens if tok not in stopwords_list]
     return after_stopwords
 
+
 #===============SLANGS===============
 def getSlangDictionary():
     allSlangWordsFile=os.path.join(os.path.join(os.path.join(os.path.join(os.path.abspath(os.path.pardir),'code'),'resources'),'slangwords'),'all_slangwords.txt')
@@ -84,27 +72,52 @@ def translateSlangs(tweet_tokens):
     slangDict=getSlangDictionary()
     return [subel for sub in [slangDict[tok].split() if tok in slangDict and slangDict[tok] is not '' else [tok] for tok in tweet_tokens] for subel in sub]
 
+
 #===============BINDER FUNCTION===============
+#   [Y]encode -> [Y]trim -> [Y]urls -> [Y]mentions -> [Y]hashtags ->
+#                [Y]punctuation -> [Y]metachar -> [Y]trim ->
+#   [Y]tokenize ->
+#                [N]slangs -> [Y]replaceGT2 -> [N]slangs -> [Y]stopwords
+
 def processTweetText(tweet):
+#   [Y]encode ->
     tweet=encodeStream(tweet)
 
+
+#   [Y]trim ->
+    tweet=trimTweet(tweet)
+#   [Y]urls->
     tweet=removeUrl(tweet)
+#   [Y]mentions
     tweet=removeMentions(tweet)
+#   [Y]hashtags ->
     tweet=removeHashtags(tweet)
 
-    tweet=removeWhitespace(tweet)
-    tweet=removePunctuation(tweet)
-    #tweet=replaceRepeats_gt2(tweet)
 
-    tokens=tokenizetweet(tweet)
-    #tokens=translateSlangs(tokens)
+#   [Y]punctuation -> [Y]metachar ->
+    tweet=removeMetaPunct(tweet)
+#   [Y]trim ->
+    tweet=trimTweet(tweet)
+
+
+#   [Y]tokenize->
+    tokens=tokenizeTweet(tweet)
+
+
+#   [N]slangs->
+    tokens=translateSlangs(tokens)
+#   [Y]repeats->
+    tokens=replaceRepeats_gt2(tokens)
+#   [N]slangs->
+    tokens=translateSlangs(tokens)
+#   [Y]stopwords->
     tokens=removeStopWords(tokens)
+
     return tokens
 
-#__name__ = '__streamfilters__'
 
 def testTweetProcessor():
-    #partially working, doesn't seem to work on urls w/o http
+    #Works!
     url_test=["Office For iPhone And Android Is Now Free  http://tcrn.ch/1rH7Fkx  by @alex",
     "1. amazing fit  @TBdressClub dress=>http://goo.gl/qwIwus        shoes=>http://goo.gl/Y95sdJ   pic.twitter.com/3dE4SFgUmT"]
     for urls in url_test:
@@ -122,26 +135,27 @@ def testTweetProcessor():
     print 'removeHashtags AFTER:', removeHashtags(hashtag_test)
 
     #works!
-    whitespace_test="    The @SEC was    7th in Conference RPI during the regular season. They’re 7-0 in the NCAA Tournament. #MarchMadness   "
-    print 'removeWhitespace BEFORE:', whitespace_test
-    print 'removeWhitespace AFTER:', removeWhitespace(whitespace_test)
+    whitespace_test="    The @SEC was\n\n    7th in Conference RPI during the regular season. They’re 7-0 in the NCAA Tournament. #MarchMadness   "
+    #whitespace_test="new\nline\ntwee..\n\n..eet"
+    print 'remove white space BEFORE:', whitespace_test
+    print 'remove white space AFTER:', trimTweet(removeMetaPunct(whitespace_test))
 
-    #TODO
+    #DONE
     metachar_test="new\nline\ntwee..\n\n..eet"
-    print 'cleanMetachars BEFORE:', metachar_test
-    print 'cleanMetachars AFTER:', cleanMetachars(metachar_test)
+    print 'removeMetachars BEFORE:', metachar_test
+    print 'removeMetachars AFTER:', removeMetaPunct(metachar_test)
 
     #Doesn't work
-    punctuation_test="Ohhh Shittt...it's missed gym o'clock again...FUCK!!\n*cracks 3rd beer"
-    print 'removePunctuation BEFORE:', punctuation_test
-    print 'removePunctuation AFTER:', removePunctuation(punctuation_test)
+    punctuation_meta_test="Ohhh Shittt...it's missed gym o'clock again...FUCK!!\n*cracks 3rd beer"
+    print 'removeMetaPunct BEFORE:', punctuation_meta_test
+    print 'removeMetaPunct AFTER:', removeMetaPunct(punctuation_meta_test)
 
     #Doesn't work
     repeats_test="Ohhh Shittt it's missed gym o'clock again...FUCKKKK!!\n*cracks 3rd beer"
     print 'replaceRepeats_gt2 BEFORE:', repeats_test
     print 'replaceRepeats_gt2 AFTER:', replaceRepeats_gt2(repeats_test.split())
 
-
+    #works!
     stopword_test='anybody considering best inward several provided'
     stopword_test_tokens=stopword_test.split()
     print 'removeStopWords BEFORE:', stopword_test_tokens
