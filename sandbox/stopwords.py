@@ -24,7 +24,9 @@ def main():
     with open(os.path.join(root,'all_stopwords.txt'),'w') as all_stop_words_file:
         all_stop_words_file.truncate()
         for sw in allstopwords_set:
-                print(sw,end='',file=all_stop_words_file)
+            #print(sw,end="")
+            #print(re.sub('[^A-Za-z0-9]+','',sw),end=",",file=all_stop_words_file)
+            print(sw,end='',file=all_stop_words_file)
 
 
 if __name__ == '__main__':

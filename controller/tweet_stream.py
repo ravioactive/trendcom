@@ -56,7 +56,7 @@ def main():
     auth.set_access_token(access_token, access_token_secret)
     api = tweepy.API(auth)
 
-    connection_string = "mongo://localhost"
+    connection_string = "mongodb://localhost"
     connection = pymongo.MongoClient(connection_string)
     database = connection.trendcom
 
@@ -69,7 +69,7 @@ def main():
     sapi = tweepy.streaming.Stream(auth, MongoStreamListener(trend, db))
     sapi.filter(track=[trend])
 
-
+#__name__='__tweet_stream__'
 
 if __name__ == '__main__':
     main()

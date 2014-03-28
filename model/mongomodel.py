@@ -2,6 +2,7 @@
 import streamfilters
 import pymongo
 import json
+import streamfilters
 #import logger - logging suppport
 
 def insertMongo(twitterResponseJSON, trendId, db):
@@ -169,3 +170,5 @@ def fetchUser(tweetJSON, trendId, db):
 #         return False
 #     else:
 #         return True
+
+#__name__='__mongomodel__'

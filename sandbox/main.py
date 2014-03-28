@@ -1,0 +1,3 @@
+import dryrun
+
+dryrun.fetchTweets()
