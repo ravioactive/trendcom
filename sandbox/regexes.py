@@ -3,16 +3,6 @@
 import re
 
 def matchGt2(string):
-    #res = pat.match(string)
-    # if res:
-    #     print 'shit found'
-    #     i=0
-    #     while res.group(i):
-    #         print res.group(i)
-    #         i+=1
-    #     #print res.group(1)
-    # else:
-    #     print 'nothing'
     pat = re.compile(r"(.)\1{2,}", re.DOTALL)
     res = re.sub(pat,r"\1\1",string)
     #res = pat.findall(string)
