@@ -5,6 +5,10 @@ from collections import defaultdict
 import sys
 import os
 from unidecode import unidecode
+from resources import globals
+
+
+
 
 #===============ENCODE===============
 def encodeStream(tweet):
@@ -15,32 +19,30 @@ def encodeStream(tweet):
     return tweet
 
 
+
 #===============CLEANSING===============
 def removeUrl(tweet):
-    urlpat=re.compile(r"(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))")
-    tweet = re.sub(urlpat, '', tweet)
+    tweet = re.sub(globals.urlpat, '', tweet)
     return tweet
 
 def removeMentions(tweet):
-    tweet = re.sub('@[^\s]+','',tweet)
+    tweet = re.sub(globals.mentionpat,'',tweet)
     return tweet
 
 def removeHashtags(tweet):
-    tweet = re.sub(r'#([^\s]+)', r'\1', tweet)
+    tweet = re.sub(globals.hastagpat, r'\1', tweet)
     return tweet
 
 
 #===============TRIMMING===============
 def removeMetaPunct(tweet):
-    tweet=re.sub('[^a-zA-Z0-9]+',' ',tweet)
+    tweet=re.sub(globals.metapunctpat,' ',tweet)
     return tweet
 
 def replaceRepeats_gt2(tweet_tokens):
     replacedTokens=[]
-    pat = re.compile(r"(.)\1{2,}", re.DOTALL)
-    subspat = r"\1\1"
     for token in tweet_tokens:
-        replacedTokens.append(re.sub(pat, subspat, token))
+        replacedTokens.append(re.sub(globals.repeatgrp1, globals.repeatsubspat, re.sub(globals.repeatgrp2, globals.repeatsubspat, token)))
     return replacedTokens
 
 def trimTweet(tweet):
@@ -53,24 +55,17 @@ def tokenizeTweet(tweet):
 
 
 #===============STOPWORDS===============
-def getAllStopwords():
-    allStopWordsFile=os.path.join(os.path.join(os.path.join(os.path.join(os.path.abspath(os.path.pardir),''),'resources'),'stopwords'),'all_stopwords.txt')
-    return open(allStopWordsFile,'r').read().splitlines()
 
 def removeStopWords(tweet_tokens):
-    stopwords_list=getAllStopwords()
-    after_stopwords=[tok for tok in tweet_tokens if tok not in stopwords_list]
+    print "EMPTY" if not globals.stopwords_list else "FULL"
+    after_stopwords=[tok for tok in tweet_tokens if tok not in globals.stopwords_list]
     return after_stopwords
 
 
 #===============SLANGS===============
-def getSlangDictionary():
-    allSlangWordsFile=os.path.join(os.path.join(os.path.join(os.path.join(os.path.abspath(os.path.pardir),'code'),'resources'),'slangwords'),'all_slangwords.txt')
-    return {k:v for (k,v) in [slw.split(':') for slw in open(allSlangWordsFile,'r')]}
 
 def translateSlangs(tweet_tokens):
-    slangDict=getSlangDictionary()
-    return [subel for sub in [slangDict[tok].split() if tok in slangDict and slangDict[tok] is not '' else [tok] for tok in tweet_tokens] for subel in sub]
+    return [subel for sub in [globals.slangDict[tok].split() if tok in globals.slangDict and globals.slangDict[tok] is not '' else [tok] for tok in tweet_tokens] for subel in sub]
 
 
 #===============BINDER FUNCTION===============
@@ -105,11 +100,11 @@ def processTweetText(tweet):
 
 
 #   [N]slangs->
-    tokens=translateSlangs(tokens)
+#   tokens=translateSlangs(tokens)
 #   [Y]repeats->
     tokens=replaceRepeats_gt2(tokens)
 #   [N]slangs->
-    tokens=translateSlangs(tokens)
+#   tokens=translateSlangs(tokens)
 #   [Y]stopwords->
     tokens=removeStopWords(tokens)
 

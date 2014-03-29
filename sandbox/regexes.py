@@ -8,6 +8,12 @@ def matchGt2(string):
     #res = pat.findall(string)
     print len(res), string, res
 
+def match2Gt2(string):
+    pat = re.compile(r"(.)\1{2,})", re.DOTALL)
+    res = re.sub(pat,r"\1\1",string)
+    #res = pat.findall(string)
+    print len(res), string, res
+
 def matchPunctGt2(tweet):
     print tweet, "."
     tweet=re.sub('[^a-zA-Z0-9]+',' ',tweet)
@@ -26,6 +32,9 @@ def every_url(urls):
 
 
 if __name__ == '__main__':
+    match2Gt2('hahahahahahahahahahahaha')
     #print "[^\s`!()\[\]{};:'\".,<>?«»“”‘’]"
     #matchPunctGt2("        aa    sds  ewrw          ")
-    every_url(["asdasdas","http://daringfireball.net/2010/07/improved_regex_for_matching_urls","http://goo.gl/qwIwus","http://goo.gl/Y95sdJ","http://tcrn.ch/1rH7Fkx  by @alex","pic.twitter.com/3dE4SFgUmT","bit.ly/foo","is.gd/foo/","1. amazing fit  @TBdressClub dress=>http://goo.gl/qwIwus        shoes=>htt"])
+    #every_url(["asdasdas","http://daringfireball.net/2010/07/improved_regex_for_matching_urls","http://goo.gl/qwIwus","http://goo.gl/Y95sdJ","http://tcrn.ch/1rH7Fkx  by @alex","pic.twitter.com/3dE4SFgUmT","bit.ly/foo","is.gd/foo/","1. amazing fit  @TBdressClub dress=>http://goo.gl/qwIwus        shoes=>htt"])
+
+
