@@ -15,7 +15,7 @@ def insertMongo(twitterResponseJSON, trendId, db):
         return ret
 
     try:
-        ret += "\n" + addUser(tweetJSON, trendId, db) + "\n" + addTweet(tweetJSON, trendId, db)
+        ret += "\n\n" + addUser(tweetJSON, trendId, db) + "\n\n" + addTweet(tweetJSON, trendId, db) + "\n\n\n\n\n\n"
     except (KeyboardInterrupt, SystemExit):
         raise
     except:
@@ -57,7 +57,11 @@ def addUser(tweetJSON, trendId, db):
         ret = "[DUP]: "
 
     pushed = pushTrendInto(user,trendId)
-    if newuser or pushed:
+
+    tweetId = str(tweetJSON['id_str'])
+    tweetRecorded = pushTweetForUser(user, tweetId)
+
+    if newuser or pushed or tweetRecorded:
         users = db.users
         upsert(user,users)
 
@@ -83,7 +87,6 @@ def upsert(doc, coll):
 ################################## TREND OPS ##################################
 
 def fetchTrend(trend, db):
-    print 'fetchTrend', trend
     trends=db.trends
     t=trends.find_one({'_id':trend});
     return t
@@ -94,6 +97,16 @@ def pushTrendInto(jsonModel,trendId):
 
     if trendId not in jsonModel['trends']:
         jsonModel['trends'].append(trendId)
+        return True
+    else:
+        return False
+
+def pushTweetForUser(userJSON, tweetId):
+    if 'tweets' not in userJSON:
+        userJSON['tweets'] = []
+
+    if tweetId not in userJSON['tweets']:
+        userJSON['tweets'].append(tweetId)
         return True
     else:
         return False
@@ -150,6 +163,12 @@ def parseTweet(tweetJSON):
     else:
         parsedTweet['loc'] = tweetJSON['geo']
     parsedTweet['created_at'] = tweetJSON['created_at']
+    parsedTweet['user_id'] = str(tweetJSON['user']['id'])
+    parsedTweet['retweeted'] = tweetJSON['retweeted']
+    parsedTweet['retweeted_id'] = ''
+    if tweetJSON['retweeted'] and 'retweeted_status' in tweetJSON:
+        if 'id_str' in tweetJSON['retweeted_status']:
+            parsedTweet['retweeted_id'] = tweetJSON['retweeted_status']['id_str']
     return parsedTweet
 
 def fetchTweet(tweetJSON, trendId, db):

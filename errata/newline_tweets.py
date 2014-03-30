@@ -1,6 +1,7 @@
 import tweepy
 from tweepy.parsers import Parser
 import json
+from pprint import pprint
 
 x_consumer_key = "cYyGL0vbIRWMiTAJ9rcQ8A"
 x_consumer_secret = "HVWH8oe5ut6hpoD5HbkKVtBU0StYuBVezbg0iIHklpc"
@@ -18,9 +19,10 @@ api = tweepy.API(auth_handler=auth, parser=RawJsonParser())
 mytweets=api.user_timeline()
 jsonmytweets=json.loads(mytweets)
 #print jsonmytweets
-for item in jsonmytweets:
-    print item, '\n'
-    break
+pprint(jsonmytweets)
+# for item in jsonmytweets:
+#     print item, '\n'
+#     break
 #print mytweets
 #for tweet in mytweets:
 #    print tweet

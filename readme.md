@@ -1,30 +1,33 @@
 
-TWITTER #TREND RECOMMENDATION USING TOPIC MODELS
+Twitter #trend Recommendation using Topic Models
 ================================================
 
 Entities
 --------
 
 Tweet obj:
- * user_id
- * text
- * id_str
- * lang
- * coord
- * loc
- * created_at
- * trend_ids[]
+ * user_id: ID of the user who tweeted, as per twitter
+ * text: content
+ * id_str: ID of this tweet, as per twitter
+ * lang: ISO Language Code, only 'en' right now
+ * coord: (lat, long) of tweet's location, as per twitter
+ * loc: of user, as per twitter
+ * created_at: time of creation, as per twitter
+ * trend_ids[ ]: a list of unique internal trend IDs being recorded where we saw this tweet
+ * retweeted: YES/NO
+ * retweet_id: ID of the tweet this tweet is a retweet of
 
 User obj:
-* id_str
-* location
-* name
-* screen_name
-* trend_ids []
+* id_str: ID of the user who tweeted, as per twitter
+* location: location sepcified by this twitter account
+* name: Name of the user on this twitter account
+* screen_name: @handle of this twitter account
+* trend_ids [ ]: A list of unique internal trend IDs being recorded, this user tweeted about
+* tweets[ ]: A list of all tweets we have seen that belong to this user
 
 Trend Obj:
-* trend
-* trendid
+* trend: name of trend
+* trendid: unique number, auto-incr
 
 
 Roadmap

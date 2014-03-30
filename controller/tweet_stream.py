@@ -11,16 +11,25 @@ class MongoStreamListener(tweepy.StreamListener):
         self.db = db
         self.trendId = mongomodel.addTrend(trend, db)
         self.logfile = logfile
+        self.calls = 0
+        self.step = 1000
+        self.smallstep = 100
 
     def on_status(self, status):
-        print status.text
+        #print status.text
+        pass
 
     def on_data(self, tweet):
         #DAO based approach, initdao in __init__?
+        self.calls += 1
         ret = mongomodel.insertMongo(tweet, self.trendId, self.db)
         ret = ret.encode('utf-8','ignore')
         self.logfile.write(ret)
-        print "RET:\n", ret
+        if self.calls%self.step == 0:
+            print globals.getUptime(), 'taken for', self.calls, 'tweets'
+        if self.calls%self.smallstep == 0:
+            sys.stdout.write('.')
+        #print "RET:\n", ret
 
     def on_error(self, status_code):
         print >> sys.stderr, 'Encountered error with status code:', status_code
@@ -41,7 +50,19 @@ def main():
     auth.set_access_token(access_token, access_token_secret)
     api = tweepy.API(auth)
 
+    args = sys.argv[1:]
+
+    if len(args)<1:
+        print "Tweet collections USAGE: missing \'trend\' argument"
+        sys.exit(1)
+
     trend = sys.argv[1]
+    if not trend or trend =='':
+        print "Value for argument \'trend\' is either blank or d.n.e."
+        sys.exit(1)
+
+    print "Tweet collection for trend ", trend, '...'
+
     sapi = tweepy.streaming.Stream(auth, MongoStreamListener(trend, globals.db, globals.logfile))
     sapi.filter(track=[trend])
     globals.destroy()

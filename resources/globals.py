@@ -50,9 +50,15 @@ def init():
     #slangDict=getSlangDictionary()
     global logfile
     logfile = getLogFile()
+    global ts_beg
+    ts_beg = datetime.datetime.now()
+
+def getUptime():
+    ts_now = datetime.datetime.now()
+    ts_diff = ts_now - ts_beg
+    return ts_diff
 
 def getAllStopwords():
-
     allStopWordsFilePath=os.path.join(os.path.join(os.path.join(os.path.join(os.path.abspath(os.path.pardir),'code'),'resources'),'stopwords'),'all_stopwords.txt')
     f = open(allStopWordsFilePath,'r')
     lines = f.read().splitlines()
@@ -67,10 +73,16 @@ def getSlangDictionary():
     return keyvalues
 
 def getLogFile():
-    ts_suffix = datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d-%H-%M-%S")
-    logfilename = "log_" + ts_suffix + ".log"
-    logFilePath = os.path.join(os.path.join(os.path.join(os.path.abspath(os.path.pardir),'code'),'logs'),logfilename)
-    f = open(logFilePath,"w+")
+    logDir = os.path.join(os.path.join(os.path.abspath(os.path.pardir),'code'),'logs')
+    stdlogfilename = os.path.join(logDir, 'current.log')
+    stdlogfilefound = os.path.isfile(stdlogfilename)
+    if(stdlogfilefound):
+        ts_suffix = datetime.datetime.fromtimestamp(os.path.getctime(stdlogfilename)).strftime("%Y-%m-%d-%H-%M-%S")
+        logfilename = os.path.join(logDir,"log_" + ts_suffix + ".log")
+        os.rename(stdlogfilename,logfilename)
+
+    currlogFilePath = os.path.join(logDir, stdlogfilename)
+    f = open(currlogFilePath,"w+")
     return f
 
 def destroy():
