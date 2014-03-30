@@ -57,7 +57,7 @@ def tokenizeTweet(tweet):
 #===============STOPWORDS===============
 
 def removeStopWords(tweet_tokens):
-    print "EMPTY" if not globals.stopwords_list else "FULL"
+    #print "EMPTY" if not globals.stopwords_list else "FULL"
     after_stopwords=[tok for tok in tweet_tokens if tok not in globals.stopwords_list]
     return after_stopwords
 

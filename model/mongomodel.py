@@ -1,4 +1,5 @@
-
+# -*- coding: utf-8 -*-
+import sys
 import streamfilters
 import pymongo
 import json
@@ -6,78 +7,96 @@ import streamfilters
 #import logger - logging suppport
 
 def insertMongo(twitterResponseJSON, trendId, db):
-    print "Adding tweet for trend:", trendid
-    #TODO: logRaw(twitterResponseJSON)
-#    logactivity() -- Idea is to have one central log of everything
     tweetJSON = json.loads(twitterResponseJSON)
-    ret = addTweet(tweetJSON, trendId, db)
-    ret += addUser(tweetJSON, trendId, db)
+
+    ret = "[RAW]: " + str(tweetJSON)
+
+    if limitInfo(tweetJSON):
+        return ret
+
+    try:
+        ret += "\n" + addUser(tweetJSON, trendId, db) + "\n" + addTweet(tweetJSON, trendId, db)
+    except (KeyboardInterrupt, SystemExit):
+        raise
+    except:
+        ret='Exception Masked', str(sys.exc_info()[0])
+        raise
+
     return ret
 
 def addTweet(tweetJSON, trendId, db):
+    if not englishOnly(tweetJSON):
+        return '[NON-EN]! '+tweetJSON['text']
+    ret = "[TWEET]: "
     tweet = fetchTweet(tweetJSON, trendId, db)
-    #if(tweetDNE(tweenJSON, db)):
+    newtweet = False
     if tweet is None:
-        newtweet = parseTweet(tweetJSON)
-        pushTrendInto(newtweet,trendId) #this is a list-correct this.
-        tweets = db.tweets
-        tweets.insert(newtweet)
-        print "Adding tweet for trend:", trendId
-        #TODO: logtweet(newtweet)
-        return newtweet['text']
+        newtweet = True
+        tweet = parseTweet(tweetJSON)
+        ret = "[NEW]: "
     else:
-        #tweetReady = fetchTweet(tweetJSON, trendId, db)
-        #Add log for fetchedTweet in fetchTweet
-        pushTrendInto(tweet,trendId)
-        return tweet['text']
+        ret = '[DUP]: '
+
+    pushed = pushTrendInto(tweet,trendId)
+    if newtweet or pushed:
+        tweets = db.tweets
+        upsert(tweet,tweets)
+
+    ret += str(tweet)
+    return ret
 
 def addUser(tweetJSON, trendId, db):
     user = fetchUser(tweetJSON, trendId, db)
+    newuser = False
+    ret = "[USER]: "
     if user is None:
-        newuser = parseUser(tweetJSON)
-        pushTrendInto(newuser,trendId)
-        users = db.users
-        users.insert(newuser)
-        print "Adding user for trend", trendId
-        #TODO: loguser(newuser)
-        return newuser['name']
+        newuser = True
+        user = parseUser(tweetJSON)
+        ret = "[NEW]: "
     else:
-        #userReady = fetchUser(tweetJSON, trendId, db)
-        # loguser({"user":userReady['id'],"alreadyExists":"true"}) --should go in fetchUser
-        pushTrendInto(user,trendId)
-        return user['name']
+        ret = "[DUP]: "
 
-def addTrend(trend, db):
-    trend=fetchTrend(trend,db)
+    pushed = pushTrendInto(user,trendId)
+    if newuser or pushed:
+        users = db.users
+        upsert(user,users)
+
+    ret = str(user)
+    return ret
+
+def addTrend(trendstr, db):
+    trend=fetchTrend(trendstr,db)
     if trend is None:
-        print "Adding trend"
+        print "[NEW]: "
         trends = db.trends
         trendId = trends.count() + 1        #How to find auto incrementing id?
-        newtrend = {"_id":trend,"trendId":trendId}
-        trends.insert(newtrend)
-        #TODO: logtrend(newtrend)
+        trend = {"_id":trendstr,"trendId":trendId}
+        upsert(trend,trends)
         return trendId
     else:
-        #trend = fetchTrend(trend, db)
-        # log trend re-fetched in fetchTrend?
-        return trend.trendId
-    #find trend if already exists
-    #return trend
+        ret = "[DUP]: "
+        return str(trend['trendId'])
+
+def upsert(doc, coll):
+    coll.save(doc,manipulate=False,safe=True)
 
 ################################## TREND OPS ##################################
 
 def fetchTrend(trend, db):
-    #log refetching
+    print 'fetchTrend', trend
     trends=db.trends
     t=trends.find_one({'_id':trend});
     return t
 
 def pushTrendInto(jsonModel,trendId):
-    trends=jsonModel['trends']
-    if trends is None:
-        trends=[]
-    elif trendId not in trends:
-        trends.append(trendId)
+    if 'trends' not in jsonModel:
+        jsonModel['trends'] = []
+
+    if trendId not in jsonModel['trends']:
+        jsonModel['trends'].append(trendId)
+        return True
+    else:
+        return False
 
 #Unused
 def seenForTrend(jsonModel,trendId):
@@ -89,27 +108,45 @@ def seenForTrend(jsonModel,trendId):
 
 ################################## TWEET OPS ##################################
 # Tweet obj:
-#     * user_id
-#     * text
-#     * id_str
-#     * lang
-#     * geo,coordinates,place
-#     * created_at
-#     * trend_id
+#     * user_id,
+#     * text,
+#     * id_str,
+#     * lang,
+#     * coord,
+#     * loc,
+#     * created_at,
+#     * trend_ids[]
+
+def limitInfo(tweetJSON):
+    if 'limit' in tweetJSON:
+        return True
+    else:
+        return False
+
+def englishOnly(tweetJSON):
+    if 'lang' in tweetJSON:
+        if tweetJSON['lang'] == 'en':
+            return True
+        else:
+            return False
+    else:
+        print 'Unknown language'
+        return False
 
 def parseTweet(tweetJSON):
-    #TODO
     parsedTweet = {};
     tweet_text=tweetJSON['text']
     parsedTweet['text'] = tweet_text
 
-    tokenizedTweet=processTweetText(tweet_text)
+    tokenizedTweet=streamfilters.processTweetText(tweet_text)
     parsedTweet['tokens']=tokenizedTweet
 
-    parsedTweet['_id'] = tweetJSON['id_str']
-    parsedTweet['lang'] = tweetJSON['lang']
-    if tweetJSON['geo'] == "":
-        parsedTweet['loc'] = tweetJSON['user']['location']
+    parsedTweet['_id'] = str(tweetJSON['id_str'])
+    parsedTweet['lang'] = str(tweetJSON['lang'])
+    if tweetJSON['coordinates'] is not "":
+        parsedTweet['coord'] = str(tweetJSON['coordinates'])
+    if tweetJSON['geo'] is "":
+        parsedTweet['loc'] = str(tweetJSON['user']['location'])
     else:
         parsedTweet['loc'] = tweetJSON['geo']
     parsedTweet['created_at'] = tweetJSON['created_at']
@@ -124,51 +161,22 @@ def fetchTweet(tweetJSON, trendId, db):
 
 ################################## USER OPS ##################################
 # User obj:
-#     * id_str
-#     * location
-#     * name
-#     * screen_name
-#     * trend_ids []
+#     * id_str,
+#     * location,
+#     * name,
+#     * screen_name,
+#     * trend_ids [],
 
 def parseUser(tweetJSON):
     parsedUser = {}
-    parsedUser['_id']=tweetJSON['user']['id']
+    parsedUser['_id']=str(tweetJSON['user']['id'])
     parsedUser['loc']=tweetJSON['user']['location']
     parsedUser['name']=tweetJSON['user']['name']
     parsedUser['handle']=tweetJSON['user']['screen_name']
     return parsedUser
 
 def fetchUser(tweetJSON, trendId, db):
-    # log refetching
     userId=tweetJSON['user']['id']
     users=db.users
     user = users.find_one({'_id':userId})
     return user
-
-
-#===deprecated===
-# def trendDNE(trend, db):
-#     #separated to be implemeted as fast as possible
-#     return False
-
-# def tweetDNE(tweetJSON, db):
-#     #separated to be implemeted as fast as possible
-#     tweetId = tweetJSON['id_str']
-#     tweets=db.tweets
-#     tweet = tweets.find_one({'_id':tweetId})
-#     if(tweet==null):
-#         return False
-#     else:
-#         return True
-
-# def userDNE(tweetJSON, db):
-#     #separated to be implemeted as fast as possible
-#     userId=tweetJSON['user']['id']
-#     users=db.users
-#     user = users.find_one({'_id':userId})
-#     if(user==null):
-#         return False
-#     else:
-#         return True
-
-#__name__='__mongomodel__'
