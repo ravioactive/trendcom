@@ -4,26 +4,17 @@ import os
 import pymongo
 import time
 import datetime
+import keys
 
 def init():
-
-    global x_consumer_key
-    x_consumer_key = "cYyGL0vbIRWMiTAJ9rcQ8A"
-    global x_consumer_secret
-    x_consumer_secret = "HVWH8oe5ut6hpoD5HbkKVtBU0StYuBVezbg0iIHklpc"
-    global x_access_token
-    x_access_token = "51518286-uSn7aIdVPSfQBk6uWexPqdU8cx6SPTMrNLvlo1tpC"
-    global x_access_token_secret
-    x_access_token_secret = "e2AKBACbYgUvaVZOcAnv5wlxEKjsl3wfR1PfE7uXLuvFt"
-
-    global t_consumer_key
-    t_consumer_key = "wgCW9kuShXD8Ck9oPibLhw"
-    global t_consumer_secret
-    t_consumer_secret = "YK7dvpmpXvqkEtzBPD2R3cpWZOPgtiFtAlg3uifHU"
-    global t_access_token
-    t_access_token = "51518286-kVybQaBS0hKzcJaZA5fVk39bHTnMkqVeXuyF2qvUB"
-    global t_access_token_secret
-    t_access_token_secret = "H8RNy01CpIEcBhn9wqTek2YEOjYtaVkiYirirK2s6YBCl"
+    global consumer_key
+    consumer_key = keys.x_consumer_key
+    global consumer_secret
+    consumer_secret = keys.x_consumer_secret
+    global access_token
+    access_token = keys.x_access_token
+    global access_token_secret
+    access_token_secret = keys.x_access_token_secret
 
     connection_string = "mongodb://localhost"
     connection = pymongo.MongoClient(connection_string)
@@ -79,6 +70,12 @@ def getLogFile():
     if(stdlogfilefound):
         ts_suffix = datetime.datetime.fromtimestamp(os.path.getctime(stdlogfilename)).strftime("%Y-%m-%d-%H-%M-%S")
         logfilename = os.path.join(logDir,"log_" + ts_suffix + ".log")
+        i=1
+        while os.path.isfile(logfilename):
+            logfilename = os.path.join(logDir,"log_" + ts_suffix + "_" + str(i) + ".log")
+            print '1', stdlogfilename, '2', logfilename
+            i+=1
+
         os.rename(stdlogfilename,logfilename)
 
     currlogFilePath = os.path.join(logDir, stdlogfilename)

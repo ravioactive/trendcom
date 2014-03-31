@@ -4,6 +4,7 @@ import sys
 import os
 from model import mongomodel
 from resources import globals
+from resources import keys
 
 class MongoStreamListener(tweepy.StreamListener):
     def __init__(self, trend, db, logfile):
@@ -41,13 +42,8 @@ class MongoStreamListener(tweepy.StreamListener):
 
 def main():
     globals.init()
-    consumer_key = globals.x_consumer_key
-    consumer_secret = globals.x_consumer_secret
-    access_token = globals.x_access_token
-    access_token_secret = globals.x_access_token_secret
-
-    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-    auth.set_access_token(access_token, access_token_secret)
+    auth = tweepy.OAuthHandler(globals.consumer_key, globals.consumer_secret)
+    auth.set_access_token(globals.access_token, globals.access_token_secret)
     api = tweepy.API(auth)
 
     args = sys.argv[1:]
