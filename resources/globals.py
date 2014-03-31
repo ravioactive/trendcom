@@ -73,7 +73,6 @@ def getLogFile():
         i=1
         while os.path.isfile(logfilename):
             logfilename = os.path.join(logDir,"log_" + ts_suffix + "_" + str(i) + ".log")
-            print '1', stdlogfilename, '2', logfilename
             i+=1
 
         os.rename(stdlogfilename,logfilename)
