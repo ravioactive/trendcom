@@ -19,12 +19,13 @@ class corpus_bow_iter:
             self.dictionary = None
         elif len(args) == 2:
             self.corpusIterator = args[0]
+            self.corpusIterator.cursor.rewind()
             self.dictionary = args[1]
         elif len(args) >= 3:
             # pymongo.database.Database
             self.corpusIterator = corpus_iter(args[0], args[1])
+            self.corpusIterator.cursor.rewind()
             self.dictionary = args[2]
-        self.corpusIterator.cursor.rewind()
 
     def __iter__(self):
         for doc in self.corpusIterator.cursor:

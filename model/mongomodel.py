@@ -111,7 +111,7 @@ def fetchTrendId(trend, db):
 def getTweetsCursor(trend, db):
     tId = fetchTrendId(trend, db)
     tweets = db.tweets
-    cursor = tweets.find({"trends": str(tId)}, {"tokens": True, "_id": True})
+    cursor = tweets.find({"trends": str(tId)})
     return cursor
 
 

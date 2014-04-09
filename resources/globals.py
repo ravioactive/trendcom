@@ -50,11 +50,75 @@ def init():
     logfile = getLogFile()
     global ts_beg
     ts_beg = datetime.datetime.now()
+
+
+    global ldaObjBasePath
+    ldaObjBasePath = getLdaObjBasePath()
+
+    global DICT
+    DICT = "d"
+    global DICT_FILE_TYPE
+    DICT_FILE_TYPE = ".dict"
+
+    global CORPUS
+    CORPUS = "c"
+    global LDA_CORPUS_TYPE
+    LDA_CORPUS_TYPE = ""
+    global MM_CORPUS_TYPE
+    MM_CORPUS_TYPE = ".mm"
+    global BLEI_CORPUS_TYPE
+    BLEI_CORPUS_TYPE = ".lda-c"
+    global SVMLIGHT_CORPUS_TYPE
+    SVMLIGHT_CORPUS_TYPE = ".svmlight"
+    global LOW_CORPUS_TYPE
+    LOW_CORPUS_TYPE = ".low"
+
     inited = True
 
 
 def isInit():
     return inited
+
+
+def validatedLdaFileName(name, extn=""):
+    if extn != "":
+        name = name + extn
+    filepath = os.path.join(ldaObjBasePath, name)
+    fullObjName = ""
+    if os.path.isfile(filepath):
+        fullObjName = filepath
+    return fullObjName
+
+
+def getLdaObjBasePath():
+    objPath = os.path.join(os.path.join(os.path.join(os.path.abspath(os.path.pardir), 'code'), 'resources'), 'lda')
+    return objPath
+
+
+def getLdaObjFileName(trend, typeName, **kwargs):
+    typeStr = "", extn = ""
+    if typeName == DICT:
+        typeStr = "_dict_"
+        extn = DICT_FILE_TYPE
+    elif typeName == CORPUS:
+        typeStr = "_corpus_"
+        if "extn" in kwargs:
+            extn = kwargs["extn"]
+        else:
+            extn = ""
+    else:
+        return ""
+
+    nameonly = trend + typeStr + datetime.datetime.fromtimestamp(time.time()).strftime("%Y-%m-%d-%H-%M-%S")
+    fullnameonly = os.path.join(ldaObjBasePath, nameonly)
+    fullname = fullnameonly + extn
+
+    i = 1
+    while(os.path.isfile(fullname)):
+        fullname = fullnameonly + "_" + i + extn
+        i += 1
+
+    return fullname
 
 
 def getUptime():
