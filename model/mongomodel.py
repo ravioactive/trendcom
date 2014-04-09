@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import sys
 import streamfilters
-import pymongo
 import json
-import streamfilters
-#import logger - logging suppport
+# import logger - logging suppport
+
 
 def insertMongo(twitterResponseJSON, trendId, db):
     tweetJSON = json.loads(twitterResponseJSON)
@@ -17,16 +16,22 @@ def insertMongo(twitterResponseJSON, trendId, db):
     try:
         ret += "\n\n" + addUser(tweetJSON, trendId, db) + "\n\n" + addTweet(tweetJSON, trendId, db) + "\n\n\n\n\n\n"
     except (KeyboardInterrupt, SystemExit):
+
         raise
     except:
-        ret='Exception Masked', str(sys.exc_info()[0])
+        ret = 'Exception Masked', str(sys.exc_info()[0])
         raise
 
     return ret
 
+
 def addTweet(tweetJSON, trendId, db):
     if not englishOnly(tweetJSON):
-        return '[NON-EN]! '+tweetJSON['text']
+        return '[NON-EN]! ' + tweetJSON['text']
+
+    if isRetweet(tweetJSON):
+        return '[RETWEET] ' + tweetJSON['text']
+
     ret = "[TWEET]: "
     tweet = fetchTweet(tweetJSON, trendId, db)
     newtweet = False
@@ -37,13 +42,14 @@ def addTweet(tweetJSON, trendId, db):
     else:
         ret = '[DUP]: '
 
-    pushed = pushTrendInto(tweet,trendId)
+    pushed = pushTrendInto(tweet, trendId)
     if newtweet or pushed:
         tweets = db.tweets
-        upsert(tweet,tweets)
+        upsert(tweet, tweets)
 
     ret += str(tweet)
     return ret
+
 
 def addUser(tweetJSON, trendId, db):
     user = fetchUser(tweetJSON, trendId, db)
@@ -56,42 +62,60 @@ def addUser(tweetJSON, trendId, db):
     else:
         ret = "[DUP]: "
 
-    pushed = pushTrendInto(user,trendId)
+    pushed = pushTrendInto(user, trendId)
 
     tweetId = str(tweetJSON['id_str'])
     tweetRecorded = pushTweetForUser(user, tweetId)
 
     if newuser or pushed or tweetRecorded:
         users = db.users
-        upsert(user,users)
+        upsert(user, users)
 
     ret = str(user)
     return ret
 
+
 def addTrend(trendstr, db):
-    trend=fetchTrend(trendstr,db)
+    trend = fetchTrend(trendstr, db)
     if trend is None:
         print "[NEW]: "
         trends = db.trends
-        trendId = trends.count() + 1        #How to find auto incrementing id?
-        trend = {"_id":trendstr,"trendId":trendId}
-        upsert(trend,trends)
+        trendId = trends.count() + 1        # How to find auto incrementing id?
+        trend = {"_id": trendstr, "trendId": trendId}
+        upsert(trend, trends)
         return trendId
     else:
-        ret = "[DUP]: "
         return str(trend['trendId'])
 
-def upsert(doc, coll):
-    coll.save(doc,manipulate=False,safe=True)
 
-################################## TREND OPS ##################################
+def upsert(doc, coll):
+    coll.save(doc, manipulate=False, safe=True)
+
+# ################################# TREND OPS ##################################
+
 
 def fetchTrend(trend, db):
-    trends=db.trends
-    t=trends.find_one({'_id':trend});
+    trends = db.trends
+    t = trends.find_one({'_id': trend})
     return t
 
-def pushTrendInto(jsonModel,trendId):
+
+def fetchTrendId(trend, db):
+    t = fetchTrend(trend, db)
+    if t is None:
+        return -1
+    else:
+        return t['trendId']
+
+
+def getTweetsCursor(trend, db):
+    tId = fetchTrendId(trend, db)
+    tweets = db.tweets
+    cursor = tweets.find({"trends": str(tId)}, {"tokens": True, "_id": True})
+    return cursor
+
+
+def pushTrendInto(jsonModel, trendId):
     if 'trends' not in jsonModel:
         jsonModel['trends'] = []
 
@@ -100,6 +124,7 @@ def pushTrendInto(jsonModel,trendId):
         return True
     else:
         return False
+
 
 def pushTweetForUser(userJSON, tweetId):
     if 'tweets' not in userJSON:
@@ -111,15 +136,16 @@ def pushTweetForUser(userJSON, tweetId):
     else:
         return False
 
-#Unused
-def seenForTrend(jsonModel,trendId):
-    trends=jsonModel['trends']
+
+# Unused
+def seenForTrend(jsonModel, trendId):
+    trends = jsonModel['trends']
     if trends is None:
         return False
     else:
         return trendId in trends
 
-################################## TWEET OPS ##################################
+# ################################# TWEET OPS ##################################
 # Tweet obj:
 #     * user_id,
 #     * text,
@@ -130,11 +156,17 @@ def seenForTrend(jsonModel,trendId):
 #     * created_at,
 #     * trend_ids[]
 
+
+def isRetweet(tweetJSON):
+    return tweetJSON['retweeted'] or streamfilters.isRT(tweetJSON['text'])
+
+
 def limitInfo(tweetJSON):
     if 'limit' in tweetJSON:
         return True
     else:
         return False
+
 
 def englishOnly(tweetJSON):
     if 'lang' in tweetJSON:
@@ -146,13 +178,14 @@ def englishOnly(tweetJSON):
         print 'Unknown language'
         return False
 
+
 def parseTweet(tweetJSON):
-    parsedTweet = {};
-    tweet_text=tweetJSON['text']
+    parsedTweet = {}
+    tweet_text = tweetJSON['text']
     parsedTweet['text'] = tweet_text
 
-    tokenizedTweet=streamfilters.processTweetText(tweet_text)
-    parsedTweet['tokens']=tokenizedTweet
+    tokenizedTweet = streamfilters.processTweetText(tweet_text)
+    parsedTweet['tokens'] = tokenizedTweet
 
     parsedTweet['_id'] = str(tweetJSON['id_str'])
     parsedTweet['lang'] = str(tweetJSON['lang'])
@@ -164,21 +197,22 @@ def parseTweet(tweetJSON):
         parsedTweet['loc'] = tweetJSON['geo']
     parsedTweet['created_at'] = tweetJSON['created_at']
     parsedTweet['user_id'] = str(tweetJSON['user']['id'])
-    parsedTweet['retweeted'] = tweetJSON['retweeted']
-    parsedTweet['retweeted_id'] = ''
-    if tweetJSON['retweeted'] and 'retweeted_status' in tweetJSON:
-        if 'id_str' in tweetJSON['retweeted_status']:
-            parsedTweet['retweeted_id'] = tweetJSON['retweeted_status']['id_str']
+    # parsedTweet['retweeted'] = tweetJSON['retweeted']
+    # parsedTweet['retweeted_id'] = ''
+    # if tweetJSON['retweeted'] and 'retweeted_status' in tweetJSON:
+    #     if 'id_str' in tweetJSON['retweeted_status']:
+    #         parsedTweet['retweeted_id'] = tweetJSON['retweeted_status']['id_str']
     return parsedTweet
+
 
 def fetchTweet(tweetJSON, trendId, db):
     # log refetching
     tweetId = tweetJSON['id_str']
-    tweets=db.tweets
-    tweet = tweets.find_one({'_id':tweetId})
+    tweets = db.tweets
+    tweet = tweets.find_one({'_id': tweetId})
     return tweet
 
-################################## USER OPS ##################################
+# ################################# USER OPS ##################################
 # User obj:
 #     * id_str,
 #     * location,
@@ -186,16 +220,18 @@ def fetchTweet(tweetJSON, trendId, db):
 #     * screen_name,
 #     * trend_ids [],
 
+
 def parseUser(tweetJSON):
     parsedUser = {}
-    parsedUser['_id']=str(tweetJSON['user']['id'])
-    parsedUser['loc']=tweetJSON['user']['location']
-    parsedUser['name']=tweetJSON['user']['name']
-    parsedUser['handle']=tweetJSON['user']['screen_name']
+    parsedUser['_id'] = str(tweetJSON['user']['id'])
+    parsedUser['loc'] = tweetJSON['user']['location']
+    parsedUser['name'] = tweetJSON['user']['name']
+    parsedUser['handle'] = tweetJSON['user']['screen_name']
     return parsedUser
 
+
 def fetchUser(tweetJSON, trendId, db):
-    userId=tweetJSON['user']['id']
-    users=db.users
-    user = users.find_one({'_id':userId})
+    userId = tweetJSON['user']['id']
+    users = db.users
+    user = users.find_one({'_id': userId})
     return user

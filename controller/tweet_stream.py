@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import tweepy
 import sys
-import os
 from model import mongomodel
 from resources import globals
-from resources import keys
+
 
 class MongoStreamListener(tweepy.StreamListener):
     def __init__(self, trend, db, logfile):
@@ -23,45 +22,52 @@ class MongoStreamListener(tweepy.StreamListener):
     def on_data(self, tweet):
         #DAO based approach, initdao in __init__?
         self.calls += 1
+
         ret = mongomodel.insertMongo(tweet, self.trendId, self.db)
-        ret = ret.encode('utf-8','ignore')
+        ret = ret.encode('utf-8', 'ignore')
         self.logfile.write(ret)
-        if self.calls%self.step == 0:
+        if self.calls % self.step == 0:
             print globals.getUptime(), 'taken for', self.calls, 'tweets'
-        if self.calls%self.smallstep == 0:
+        if self.calls % self.smallstep == 0:
             sys.stdout.write('.')
         #print "RET:\n", ret
 
     def on_error(self, status_code):
         print >> sys.stderr, 'Encountered error with status code:', status_code
-        return True # Don't kill the stream
+        return True  # Don't kill the stream
 
     def on_timeout(self):
         print >> sys.stderr, 'Timeout...'
-        return True # Don't kill the stream
+        return True  # Don't kill the stream
+
 
 def main():
     globals.init()
     auth = tweepy.OAuthHandler(globals.consumer_key, globals.consumer_secret)
     auth.set_access_token(globals.access_token, globals.access_token_secret)
-    api = tweepy.API(auth)
+    # api = tweepy.API(auth)
 
     args = sys.argv[1:]
 
-    if len(args)<1:
+    if len(args) < 1:
         print "Tweet collections USAGE: missing \'trend\' argument"
         sys.exit(1)
 
     trend = sys.argv[1]
-    if not trend or trend =='':
+    if not trend or trend == '':
         print "Value for argument \'trend\' is either blank or d.n.e."
         sys.exit(1)
 
     print "Tweet collection for trend ", trend, '...'
 
     sapi = tweepy.streaming.Stream(auth, MongoStreamListener(trend, globals.db, globals.logfile))
-    sapi.filter(track=[trend])
-    globals.destroy()
+    try:
+        sapi.filter(track=[trend])
+    except(KeyboardInterrupt, SystemExit):
+        print "User stopped with Ctrl+C"
+    finally:
+        print "ENTER FINALLY"
+        globals.destroy()
 
 if __name__ == '__main__':
     main()
