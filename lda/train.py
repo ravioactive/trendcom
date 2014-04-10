@@ -3,15 +3,18 @@
 #                                   corpus            transformation        Jensen-Shannon
 #                               serialize to disk                          May need to implement
 
-from gensim import corpora
+from gensim import corpora, models, similarities
 from resources import globals
 import tweetcorpus
 import operator
 import itertools
 
+import logging
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
 
 def createBOWCorpus(corpus, dictionary):
-    trend_corpus_bow = tweetcorpus.corpus_bow_iter(trend_corpus, trendDict)
+    trend_corpus_bow = tweetcorpus.corpus_bow_iter(corpus, dictionary)
     return trend_corpus_bow
 
 
@@ -86,6 +89,37 @@ def bowtrainer(trend):
     trend_corpus_bow = tweetcorpus.corpus_bow_iter(trend, globals.db, trendDict)
     print trend_corpus_bow
 
+
+def asTfIdf(corpus):
+    tfidf = models.TfidfModel(corpus)
+    return tfidf
+
+
+def asLda(corpus, dictionary, numtopics):
+    lda = models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary, num_topics=numtopics, update_every=0, passes=globals.passes_corpus)
+    return lda
+
+
+def saveLdaModel(trend, ldamodel):
+    modelName = globals.getLdaObjFileName(trend, globals.MODEL)
+    if modelName == "":
+        return False
+
+    ldamodel.save(modelName)
+
+
+def getModelFromFile(name, extn=globals.LDA_MODEL_TYPE):
+    disk_model = None
+    validName = globals.validatedLdaFileName(name, extn)
+    if validName == "":
+        return disk_model
+
+    if(extn == globals.LDA_MODEL_TYPE):
+        disk_model = models.ldamodel.LdaModel.load(validName)
+
+    return disk_model
+
+
 def trainer_new(trend):
     globals.init()
     trend_corpus = createCorpus(trend)
@@ -96,6 +130,9 @@ def trainer_new(trend):
     bow_corpus = createBOWCorpus(trend_corpus, trendDict)
     saveDictionary(trend, trendDict)
     saveBOWCorpus(trend, bow_corpus)
+    lda = asLda(bow_corpus, trendDict, globals.num_topics_lda)
+    saveLdaModel(trend, lda)
+
 
 def trainer_load(dictFileName, bowCorpusFileName, **kwargs):
     savedDictionary = getDictionaryFromFile(dictFileName)
@@ -105,6 +142,7 @@ def trainer_load(dictFileName, bowCorpusFileName, **kwargs):
         extn = kwargs["corpextn"]
     savedBowCorpus = getBOWCorpusFromFile(bowCorpusFileName, extn)
     print savedBowCorpus
+
 
 def getIdsForNumericTokens(d):
     t2id = d.token2id

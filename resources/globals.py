@@ -62,8 +62,6 @@ def init():
 
     global CORPUS
     CORPUS = "c"
-    global LDA_CORPUS_TYPE
-    LDA_CORPUS_TYPE = ""
     global MM_CORPUS_TYPE
     MM_CORPUS_TYPE = ".mm"
     global BLEI_CORPUS_TYPE
@@ -72,6 +70,19 @@ def init():
     SVMLIGHT_CORPUS_TYPE = ".svmlight"
     global LOW_CORPUS_TYPE
     LOW_CORPUS_TYPE = ".low"
+    global MODEL
+
+    MODEL = "m"
+    global LDA_MODEL_TYPE = ".lda"
+
+    global num_topics_lda:
+    num_topics_lda = 200
+    global lda_chunk_size
+    lda_chunk_size = 10000
+    global update_freq
+    update_freq = 1
+    global passes_corpus
+    passes_corpus = 1
 
     inited = True
 
@@ -106,6 +117,9 @@ def getLdaObjFileName(trend, typeName, **kwargs):
             extn = kwargs["extn"]
         else:
             extn = ""
+    elif typeName == MODEL:
+        typeStr = "_model_"
+        extn = LDA_MODEL_TYPE
     else:
         return ""
 
