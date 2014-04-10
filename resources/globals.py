@@ -70,10 +70,11 @@ def init():
     SVMLIGHT_CORPUS_TYPE = ".svmlight"
     global LOW_CORPUS_TYPE
     LOW_CORPUS_TYPE = ".low"
-    global MODEL
 
+    global MODEL
     MODEL = "m"
-    global LDA_MODEL_TYPE = ".lda"
+    global LDA_MODEL_TYPE
+    LDA_MODEL_TYPE = ".lda"
 
     global num_topics_lda:
     num_topics_lda = 200
