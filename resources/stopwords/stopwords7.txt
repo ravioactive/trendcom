@@ -160,3 +160,8 @@ you'll
 you're
 you've
 your
+follow
+rt
+rts
+follows
+follower
