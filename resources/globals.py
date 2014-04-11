@@ -76,7 +76,7 @@ def init():
     global LDA_MODEL_TYPE
     LDA_MODEL_TYPE = ".lda"
 
-    global num_topics_lda:
+    global num_topics_lda
     num_topics_lda = 200
     global lda_chunk_size
     lda_chunk_size = 10000
