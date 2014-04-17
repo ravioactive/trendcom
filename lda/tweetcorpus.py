@@ -20,13 +20,18 @@ class corpus_bow_iter:
         elif len(args) == 2:
             self.corpusIterator = args[0]
             self.corpusIterator.cursor.rewind()
+            self.len = self.corpusIterator.cursor.count()
             self.dictionary = args[1]
         elif len(args) >= 3:
             # pymongo.database.Database
             self.corpusIterator = corpus_iter(args[0], args[1])
             self.corpusIterator.cursor.rewind()
+            self.len = self.corpusIterator.cursor.count()
             self.dictionary = args[2]
 
     def __iter__(self):
         for doc in self.corpusIterator.cursor:
             yield self.dictionary.doc2bow(doc['tokens'])
+
+    def __len__(self):
+        return self.len

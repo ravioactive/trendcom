@@ -1,7 +1,7 @@
 import pymongo
 import sys
 from model import streamfilters
-from resources import globals
+from resources import globalobjs
 
 connection_string = "mongodb://localhost"
 connection = pymongo.MongoClient(connection_string, safe=True)
@@ -21,9 +21,9 @@ def fetchTweets():
     #limit=crazydump.count()
     limit=40
     counter=0
-    globals.init()
+    globalobjs.init()
 
-    #print globals.stopwords_list
+    #print globalobjs.stopwords_list
     for tweetDoc in iter:
         print '\n', counter, '\n', tweetDoc['text'].encode('utf-8','ignore')
         tt=streamfilters.processTweetText(tweetDoc['text'])

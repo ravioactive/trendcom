@@ -4,13 +4,14 @@
 #                               serialize to disk                          May need to implement
 
 from gensim import corpora, models, similarities
-from resources import globals
+from resources import globalobjs
 import tweetcorpus
 import operator
 import itertools
 
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+globalobjs.init()
 
 
 def createBOWCorpus(corpus, dictionary):
@@ -19,17 +20,20 @@ def createBOWCorpus(corpus, dictionary):
 
 
 def createCorpus(trend):
-    trend_corpus = tweetcorpus.corpus_iter(trend, globals.db)
+    trend_corpus = tweetcorpus.corpus_iter(trend, globalobjs.db)
     return trend_corpus
 
 
 def createDictionary(corpus):
-    trendDict = corpora.Dictionary(corpus)
-    return trendDict
+    corpusDictionary = corpora.Dictionary(corpus)
+    numericTokenIds = getIdsForNumericTokens(corpusDictionary)
+    corpusDictionary.filter_tokens(numericTokenIds)
+    corpusDictionary.compactify()
+    return corpusDictionary
 
 
 def saveDictionary(trend, dictionary):
-    dictName = globals.getLdaObjFileName(trend, globals.DICT)
+    dictName = globalobjs.getLdaObjFileName(trend, globalobjs.DICT)
     if dictName == "":
         return False
     else:
@@ -37,34 +41,34 @@ def saveDictionary(trend, dictionary):
         return True
 
 
-def saveBOWCorpus(trend, bowcorpus, extn=globals.MM_CORPUS_TYPE):
-    corpusName = globals.getLdaObjFileName(trend, globals.CORPUS, extn)
+def saveBOWCorpus(trend, bowcorpus, extn = globalobjs.MM_CORPUS_TYPE):
+    corpusName = globalobjs.getLdaObjFileName(trend, globalobjs.CORPUS, extn = extn)
     if corpusName == "":
         return False
 
-    if(extn == globals.MM_CORPUS_TYPE):
+    if(extn == globalobjs.MM_CORPUS_TYPE):
         corpora.MmCorpus.serialize(corpusName, bowcorpus)
-    elif(extn == globals.BLEI_CORPUS_TYPE):
+    elif(extn == globalobjs.BLEI_CORPUS_TYPE):
         corpora.BleiCorpus.serialize(corpusName, bowcorpus)
-    elif(extn == globals.SVMLIGHT_CORPUS_TYPE):
+    elif(extn == globalobjs.SVMLIGHT_CORPUS_TYPE):
         corpora.SvmLightCorpus.serialize(corpusName, bowcorpus)
-    elif(extn == globals.LOW_CORPUS_TYPE):
+    elif(extn == globalobjs.LOW_CORPUS_TYPE):
         corpora.LowCorpus.serialize(corpusName, bowcorpus)
 
 
-def getBOWCorpusFromFile(name, extn=globals.MM_CORPUS_TYPE):
+def getBOWCorpusFromFile(name, extn=globalobjs.MM_CORPUS_TYPE):
     disk_bowcorpus = None
-    validName = globals.validatedLdaFileName(name, extn)
+    validName = globalobjs.validatedLdaFileName(name, extn)
     if validName == "":
         return disk_bowcorpus
 
-    if(extn == globals.MM_CORPUS_TYPE):
+    if(extn == globalobjs.MM_CORPUS_TYPE):
         disk_bowcorpus = corpora.MmCorpus(validName)
-    elif(extn == globals.BLEI_CORPUS_TYPE):
+    elif(extn == globalobjs.BLEI_CORPUS_TYPE):
         disk_bowcorpus = corpora.BleiCorpus(validName)
-    elif(extn == globals.SVMLIGHT_CORPUS_TYPE):
+    elif(extn == globalobjs.SVMLIGHT_CORPUS_TYPE):
         disk_bowcorpus = corpora.SvmLightCorpus(validName)
-    elif(extn == globals.LOW_CORPUS_TYPE):
+    elif(extn == globalobjs.LOW_CORPUS_TYPE):
         disk_bowcorpus = corpora.LowCorpus(validName)
 
     return disk_bowcorpus
@@ -72,22 +76,12 @@ def getBOWCorpusFromFile(name, extn=globals.MM_CORPUS_TYPE):
 
 def getDictionaryFromFile(name, extn=""):
     disk_dictionary = None
-    validName = globals.validatedLdaFileName(name, globals.DICT_FILE_TYPE)
+    validName = globalobjs.validatedLdaFileName(name, globalobjs.DICT_FILE_TYPE)
     if validName == "":
         return disk_dictionary
 
     disk_dictionary = corpora.Dictionary.load(validName)
     return disk_dictionary
-
-
-def bowtrainer(trend):
-    globals.init()
-    trend_corpus = tweetcorpus.corpus_iter(trend, globals.db)
-    print 'tweetcorpus', trend_corpus
-    trendDict = corpora.Dictionary(trend_corpus)
-    # trend_corpus_bow = tweetcorpus.corpus_bow_iter(trend_corpus, trendDict)
-    trend_corpus_bow = tweetcorpus.corpus_bow_iter(trend, globals.db, trendDict)
-    print trend_corpus_bow
 
 
 def asTfIdf(corpus):
@@ -96,48 +90,47 @@ def asTfIdf(corpus):
 
 
 def asLda(corpus, dictionary, numtopics):
-    lda = models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary, num_topics=numtopics, update_every=0, passes=globals.passes_corpus)
+    lda = models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary, num_topics=numtopics, update_every=0, passes=globalobjs.passes_corpus)
     return lda
 
 
 def saveLdaModel(trend, ldamodel):
-    modelName = globals.getLdaObjFileName(trend, globals.MODEL)
+    modelName = globalobjs.getLdaObjFileName(trend, globalobjs.MODEL)
     if modelName == "":
         return False
 
     ldamodel.save(modelName)
 
 
-def getModelFromFile(name, extn=globals.LDA_MODEL_TYPE):
+def getModelFromFile(name, extn=globalobjs.LDA_MODEL_TYPE):
     disk_model = None
-    validName = globals.validatedLdaFileName(name, extn)
+    validName = globalobjs.validatedLdaFileName(name, extn)
     if validName == "":
         return disk_model
 
-    if(extn == globals.LDA_MODEL_TYPE):
+    if(extn == globalobjs.LDA_MODEL_TYPE):
         disk_model = models.ldamodel.LdaModel.load(validName)
 
     return disk_model
 
 
 def trainer_new(trend):
-    globals.init()
+    print "has inited? ", globalobjs.isInit()
     trend_corpus = createCorpus(trend)
     trendDict = createDictionary(trend_corpus)
-    numericTokenIds = getIdsForNumericTokens(trendDict)
-    trendDict.filter_tokens(numericTokenIds)
-    trendDict.compactify()
+    print trendDict
     bow_corpus = createBOWCorpus(trend_corpus, trendDict)
-    saveDictionary(trend, trendDict)
-    saveBOWCorpus(trend, bow_corpus)
-    lda = asLda(bow_corpus, trendDict, globals.num_topics_lda)
-    saveLdaModel(trend, lda)
+    #saveDictionary(trend, trendDict)
+    #saveBOWCorpus(trend, bow_corpus)
+    lda = asLda(bow_corpus, trendDict, globalobjs.num_topics_lda)
+    lda.print_topics(10, 20)
+    # saveLdaModel(trend, lda)
 
 
 def trainer_load(dictFileName, bowCorpusFileName, **kwargs):
     savedDictionary = getDictionaryFromFile(dictFileName)
     print savedDictionary
-    extn = globals.MM_CORPUS_TYPE
+    extn = globalobjs.MM_CORPUS_TYPE
     if "corpextn" in kwargs:
         extn = kwargs["corpextn"]
     savedBowCorpus = getBOWCorpusFromFile(bowCorpusFileName, extn)

@@ -1,1 +1,1 @@
-__all__ = ["TokenIterator", "train"]
+__all__ = ["train", "tweetcorpus"]

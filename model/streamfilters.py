@@ -2,7 +2,7 @@
 
 import re
 from unidecode import unidecode
-from resources import globals
+from resources import globalobjs
 
 
 
@@ -18,17 +18,17 @@ def encodeStream(tweet):
 
 #===============CLEANSING===============
 def removeUrl(tweet):
-    tweet = re.sub(globals.urlpat, '', tweet)
+    tweet = re.sub(globalobjs.urlpat, '', tweet)
     return tweet
 
 
 def removeMentions(tweet):
-    tweet = re.sub(globals.mentionpat, '', tweet)
+    tweet = re.sub(globalobjs.mentionpat, '', tweet)
     return tweet
 
 
 def removeHashtags(tweet):
-    tweet = re.sub(globals.hastagpat, r'\1', tweet)
+    tweet = re.sub(globalobjs.hastagpat, r'\1', tweet)
     return tweet
 
 
@@ -42,14 +42,14 @@ def isRT(tweet):
 
 #===============TRIMMING===============
 def removeMetaPunct(tweet):
-    tweet = re.sub(globals.metapunctpat, ' ', tweet)
+    tweet = re.sub(globalobjs.metapunctpat, ' ', tweet)
     return tweet
 
 
 def replaceRepeats_gt2(tweet_tokens):
     replacedTokens = []
     for token in tweet_tokens:
-        replacedTokens.append(re.sub(globals.repeatgrp1, globals.repeatsubspat, re.sub(globals.repeatgrp2, globals.repeatsubspat, token)))
+        replacedTokens.append(re.sub(globalobjs.repeatgrp1, globalobjs.repeatsubspat, re.sub(globalobjs.repeatgrp2, globalobjs.repeatsubspat, token)))
     return replacedTokens
 
 
@@ -65,15 +65,15 @@ def tokenizeTweet(tweet):
 #===============STOPWORDS===============
 
 def removeStopWords(tweet_tokens):
-    #print "EMPTY" if not globals.stopwords_list else "FULL"
-    after_stopwords = [tok for tok in tweet_tokens if tok not in globals.stopwords_list]
+    #print "EMPTY" if not globalobjs.stopwords_list else "FULL"
+    after_stopwords = [tok for tok in tweet_tokens if tok not in globalobjs.stopwords_list]
     return after_stopwords
 
 
 #===============SLANGS===============
 
 def translateSlangs(tweet_tokens):
-    return [subel for sub in [globals.slangDict[tok].split() if tok in globals.slangDict and globals.slangDict[tok] is not '' else [tok] for tok in tweet_tokens] for subel in sub]
+    return [subel for sub in [globalobjs.slangDict[tok].split() if tok in globalobjs.slangDict and globalobjs.slangDict[tok] is not '' else [tok] for tok in tweet_tokens] for subel in sub]
 
 
 #===============BINDER FUNCTION===============

@@ -2,7 +2,7 @@
 import tweepy
 import sys
 from model import mongomodel
-from resources import globals
+from resources import globalobjs
 
 
 class MongoStreamListener(tweepy.StreamListener):
@@ -27,7 +27,7 @@ class MongoStreamListener(tweepy.StreamListener):
         ret = ret.encode('utf-8', 'ignore')
         self.logfile.write(ret)
         if self.calls % self.step == 0:
-            print globals.getUptime(), 'taken for', self.calls, 'tweets'
+            print globalobjs.getUptime(), 'taken for', self.calls, 'tweets'
         if self.calls % self.smallstep == 0:
             sys.stdout.write('.')
         #print "RET:\n", ret
@@ -42,9 +42,9 @@ class MongoStreamListener(tweepy.StreamListener):
 
 
 def main():
-    globals.init()
-    auth = tweepy.OAuthHandler(globals.consumer_key, globals.consumer_secret)
-    auth.set_access_token(globals.access_token, globals.access_token_secret)
+    globalobjs.init()
+    auth = tweepy.OAuthHandler(globalobjs.consumer_key, globalobjs.consumer_secret)
+    auth.set_access_token(globalobjs.access_token, globalobjs.access_token_secret)
     # api = tweepy.API(auth)
 
     args = sys.argv[1:]
@@ -60,14 +60,14 @@ def main():
 
     print "Tweet collection for trend ", trend, '...'
 
-    sapi = tweepy.streaming.Stream(auth, MongoStreamListener(trend, globals.db, globals.logfile))
+    sapi = tweepy.streaming.Stream(auth, MongoStreamListener(trend, globalobjs.db, globalobjs.logfile))
     try:
         sapi.filter(track=[trend])
     except(KeyboardInterrupt, SystemExit):
         print "User stopped with Ctrl+C"
     finally:
         print "ENTER FINALLY"
-        globals.destroy()
+        globalobjs.destroy()
 
 if __name__ == '__main__':
     main()

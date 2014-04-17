@@ -1,1 +1,1 @@
-#__all__=["model", "view", "controller", "sandbox", "resources"]
+__all__=["model", "view", "controller", "sandbox", "resources", "lda"]
