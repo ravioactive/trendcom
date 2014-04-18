@@ -8,8 +8,8 @@ from resources import globalobjs
 import tweetcorpus
 import operator
 import itertools
-
 import logging
+
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 globalobjs.init()
 
@@ -19,13 +19,24 @@ def createBOWCorpus(corpus, dictionary):
     return trend_corpus_bow
 
 
+def freshBOWCorpus(bowcorpus):
+    return tweetcorpus.corpus_bow_iter(bowcorpus)
+
+
 def createCorpus(trend):
     trend_corpus = tweetcorpus.corpus_iter(trend, globalobjs.db)
     return trend_corpus
 
 
-def createDictionary(corpus):
+def getTrendStopWordIds(trend, corpDict):
+    stopWordsForTrend = globalobjs.getTrendStopWords(trend)
+    return [corpDict.token2id[stopword] for stopword in stopWordsForTrend if stopword in corpDict.token2id]
+
+
+def createDictionary(trend, corpus):
     corpusDictionary = corpora.Dictionary(corpus)
+    stopWordIds = getTrendStopWordIds(trend, corpusDictionary)
+    corpusDictionary.filter_tokens(stopWordIds)
     numericTokenIds = getIdsForNumericTokens(corpusDictionary)
     corpusDictionary.filter_tokens(numericTokenIds)
     corpusDictionary.compactify()
@@ -89,8 +100,8 @@ def asTfIdf(corpus):
     return tfidf
 
 
-def asLda(corpus, dictionary, numtopics):
-    lda = models.ldamodel.LdaModel(corpus=corpus, id2word=dictionary, num_topics=numtopics, update_every=0, passes=globalobjs.passes_corpus)
+def asLda(corpus, dictionary, numtopics, updatefreq = globalobjs.update_freq, chunksz = 2000, num_passes = globalobjs.passes_corpus):
+    lda = models.ldamodel.LdaModel(corpus = corpus, id2word = dictionary, num_topics = numtopics, chunksize = chunksz, update_every = updatefreq, passes = num_passes)
     return lda
 
 
@@ -117,14 +128,19 @@ def getModelFromFile(name, extn=globalobjs.LDA_MODEL_TYPE):
 def trainer_new(trend):
     print "has inited? ", globalobjs.isInit()
     trend_corpus = createCorpus(trend)
-    trendDict = createDictionary(trend_corpus)
+    trendDict = createDictionary(trend, trend_corpus)
     print trendDict
     bow_corpus = createBOWCorpus(trend_corpus, trendDict)
-    #saveDictionary(trend, trendDict)
-    #saveBOWCorpus(trend, bow_corpus)
-    lda = asLda(bow_corpus, trendDict, globalobjs.num_topics_lda)
-    lda.print_topics(10, 20)
-    # saveLdaModel(trend, lda)
+    saveDictionary(trend, trendDict)
+    saveBOWCorpus(trend, bow_corpus)
+    lda_static = asLda(bow_corpus, trendDict, globalobjs.num_topics_lda, 0, 2000, 20)
+    lda_static.print_topics(10, 20)
+    saveLdaModel(trend, lda_static)
+
+    fresh_bow_corpus = freshBOWCorpus(bow_corpus)
+    lda_online = asLda(fresh_bow_corpus, trendDict, globalobjs.num_topics_lda)
+    lda_online.print_topics(10, 20)
+    saveLdaModel(trend, lda_online)
 
 
 def trainer_load(dictFileName, bowCorpusFileName, **kwargs):

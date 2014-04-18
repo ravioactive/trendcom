@@ -80,7 +80,7 @@ def init():
     global num_topics_lda
     num_topics_lda = 200
     global lda_chunk_size
-    lda_chunk_size = 10000
+    lda_chunk_size = 5000
     global update_freq
     update_freq = 1
     global passes_corpus
@@ -141,6 +141,14 @@ def getUptime():
     ts_now = datetime.datetime.now()
     ts_diff = ts_now - ts_beg
     return ts_diff
+
+
+def getTrendStopWords(trend):
+    trendStopWordsFilePath = os.path.join(os.path.join(os.path.join(os.path.join(os.path.abspath(os.path.pardir), 'code'), 'resources'), 'stopwords'), trend+'_stopwords.txt')
+    f = open(trendStopWordsFilePath, 'r')
+    lines = f.read().splitlines()
+    f.close()
+    return lines
 
 
 def getAllStopwords():

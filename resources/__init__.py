@@ -1,1 +1,1 @@
-__all__ = ["globalobjs"]
+__all__ = ["globalobjs", "keys"]

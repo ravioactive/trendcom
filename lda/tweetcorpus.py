@@ -14,9 +14,17 @@ class corpus_iter:
 
 class corpus_bow_iter:
     def __init__(self, *args):
-        if len(args) < 2:
+        if len(args) < 1:
             self.corpusIterator = None
             self.dictionary = None
+        elif len(args) == 1:
+            if isinstance(args[0], corpus_bow_iter):
+                self.corpusIterator = args[0].corpusIterator
+                self.corpusIterator.cursor.rewind()
+                self.len = self.corpusIterator.cursor.count()
+                self.dictionary = args[0].dictionary
+            else:
+                raise TypeError
         elif len(args) == 2:
             self.corpusIterator = args[0]
             self.corpusIterator.cursor.rewind()
