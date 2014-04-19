@@ -47,11 +47,11 @@ Roadmap
  * Make this recommendation system live! Probably exposed as a webapp.
 
 
- RESULTS THUS FAR
+RESULTS THUS FAR
 ================
 
 Online LDA:
----------------------------
+-----------
 
 
 **ONLINE LDA (50 TOPICS):** _Topics start to disperse with infrequent words_
