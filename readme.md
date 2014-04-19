@@ -54,7 +54,7 @@ Online LDA:
 -----------
 
 
-**ONLINE LDA (50 TOPICS):** _Topics start to disperse with infrequent words_
+### **ONLINE LDA (50 TOPICS):** _Topics start to disperse with infrequent words_
 
 topic #49 (0.020): diegogarcia, lead, finding, officials, message, wood, rush, phillip, huge, philip
 
@@ -162,7 +162,7 @@ topic #0 (0.020): smear, slams, questions, pilot, picked, claims, baseless, pete
 
 
 
-**ONLINE LDA (40 TOPICS):** _Topics begin to look incomplete_
+### **ONLINE LDA (40 TOPICS):** _Topics begin to look incomplete_
 
 topic #39 (0.025): diegogarcia, passenger, falseflag, revealed, confirmed, cnn, finally, photo, quest, criminal
 
@@ -250,7 +250,7 @@ topic #0 (0.025): hope, media, give, reported, trips, top, wt20, related, drama,
 
 
 
-**ONLINE LDA (35 TOPICS):** __A cohesive unit --OPTIMUM_
+### **ONLINE LDA (35 TOPICS):** __A cohesive unit --OPTIMUM_
 
 topic #34 (0.029): live, watch, don, indonesia, happened, cnn, north, batteries, proof, pingers
 
@@ -328,7 +328,7 @@ topic #0 (0.029): chinese, family, discovers, relatives, painstaking, answers, r
 
 
 
-**ONLINE LDA (25 TOPICS):** _Looks almost good_
+### **ONLINE LDA (25 TOPICS):** _Looks almost good_
 
 topic #24 (0.040): race, diegogarcia, consistent, sounds, probe, patrol, chance, hear, aviation, falseflag
 
@@ -386,7 +386,7 @@ topic #0 (0.040): detected, diegogarcia, official, officials, usa, hijacking, gr
 
 
 
-**ONLINE LDA (20 TOPICS):** _Improvement but still noisy_
+### **ONLINE LDA (20 TOPICS):** _Improvement but still noisy_
 
 topic #19 (0.050): heard, malaysiaairlines, surface, disappearance, picked, safety, information, speculation, revealed, hopeful
 
@@ -434,7 +434,7 @@ topic #0 (0.050): black, box, ship, chinese, signals, pulse, underwater, pinger,
 
 
 
-**ONLINE LDA (10 TOPICS):** _No significant improvement_
+### **ONLINE LDA (10 TOPICS):** _No significant improvement_
 
 topic #9: black, box, helping, passengers, malaysian, news, cnn, diegogarcia, time, hijacking, breaking, find, sabotage, police, cared, signals, boxes, hope, update, role
 
@@ -462,7 +462,7 @@ topic #0: diegogarcia, australian, difficult, perth, video, evidence, najib, mal
 
 
 
-**ONLINE LDA (5 TOPICS):** _Topics have coalesced_
+### **ONLINE LDA (5 TOPICS):** _Topics have coalesced_
 
 topic #4 (0.200): diegogarcia, find, heard, days, wing, malaysian, people, finding, cnn, don, malaysiaairlines, military, consistent, story, lost, sounds, stop, life, news, sea
 
