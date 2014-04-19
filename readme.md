@@ -96,7 +96,6 @@ topic #12 (0.020): heard, close, investigators, vanished, finally, path, put, ro
 topic #11 (0.020): tragedy, family, reported, russia, govt, shadows, country, drama, criminal, love
 topic #10 (0.020): news, breaking, head, british, interesting, intense, stay, sky, report, wtf
 topic #9 (0.020): china, painstaking, rest, sad, call, cracked, peace, fb, pages, death
-
 topic #8 (0.020): sounds, human, confirmed, cover, prayers, watching, science, thoughts, positives, bbc
 topic #7 (0.020): ocean, indian, evidence, pulses, whales, crashed, hard, depth, intact, happen
 topic #6 (0.020): malaysian, month, lost, sea, location, flew, true, batteries, update, airline
