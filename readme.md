@@ -158,6 +158,10 @@ topic #0 (0.020): smear, slams, questions, pilot, picked, claims, baseless, pete
 
 
 
+
+
+
+
 **ONLINE LDA (40 TOPICS):** _Topics begin to look incomplete_
 
 topic #39 (0.025): diegogarcia, passenger, falseflag, revealed, confirmed, cnn, finally, photo, quest, criminal
@@ -242,6 +246,10 @@ topic #0 (0.025): hope, media, give, reported, trips, top, wt20, related, drama,
 
 
 
+
+
+
+
 **ONLINE LDA (35 TOPICS):** __A cohesive unit --OPTIMUM_
 
 topic #34 (0.029): live, watch, don, indonesia, happened, cnn, north, batteries, proof, pingers
@@ -315,6 +323,11 @@ topic #1 (0.029): hunt, surface, video, technology, reported, team, check, hampe
 topic #0 (0.029): chinese, family, discovers, relatives, painstaking, answers, rest, beijing, fly, sad
 
 
+
+
+
+
+
 **ONLINE LDA (25 TOPICS):** _Looks almost good_
 
 topic #24 (0.040): race, diegogarcia, consistent, sounds, probe, patrol, chance, hear, aviation, falseflag
@@ -368,6 +381,11 @@ topic #1 (0.040): wing, data, hours, video, give, theory, online, aliens, moon, 
 topic #0 (0.040): detected, diegogarcia, official, officials, usa, hijacking, great, continues, lies, rush
 
 
+
+
+
+
+
 **ONLINE LDA (20 TOPICS):** _Improvement but still noisy_
 
 topic #19 (0.050): heard, malaysiaairlines, surface, disappearance, picked, safety, information, speculation, revealed, hopeful
@@ -411,6 +429,11 @@ topic #1 (0.050): china, chinese, vessel, false, team, najib, means, tech, jim, 
 topic #0 (0.050): black, box, ship, chinese, signals, pulse, underwater, pinger, area, shield
 
 
+
+
+
+
+
 **ONLINE LDA (10 TOPICS):** _No significant improvement_
 
 topic #9: black, box, helping, passengers, malaysian, news, cnn, diegogarcia, time, hijacking, breaking, find, sabotage, police, cared, signals, boxes, hope, update, role
@@ -434,6 +457,11 @@ topic #1: objects, ocean, indian, spotted, searching, fishing, australian, equip
 topic #0: diegogarcia, australian, difficult, perth, video, evidence, najib, malaysian, military, base, cnn, families, story, media, maldives, history, human, team, operations, air
 
 
+
+
+
+
+
 **ONLINE LDA (5 TOPICS):** _Topics have coalesced_
 
 topic #4 (0.200): diegogarcia, find, heard, days, wing, malaysian, people, finding, cnn, don, malaysiaairlines, military, consistent, story, lost, sounds, stop, life, news, sea
@@ -448,8 +476,14 @@ topic #0 (0.200): china, families, chinese, month, passengers, news, latest, sla
 
 
 
-Static/Batch LDA with 10 Topics, 20 passes: _Unsatisfactory, even to corresponding model in Online LDA_
--------------------------------------------------------------------------------------------------------
+
+
+
+
+Static/Batch LDA
+----------------
+
+**With 10 Topics, 20 passes:** _Unsatisfactory, even to corresponding model in Online LDA_
 
 topic #1: find, cnn, heard, malaysiaairlines, diegogarcia, malaysian, today, good, datuk, disappearance, story, blackbox, life, video, picked, info, ve, government, gt, airlines
 
