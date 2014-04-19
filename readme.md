@@ -250,7 +250,7 @@ topic #0 (0.025): hope, media, give, reported, trips, top, wt20, related, drama,
 
 
 
-### **ONLINE LDA (35 TOPICS):** __A cohesive unit --OPTIMUM_
+### **ONLINE LDA (35 TOPICS):** _A cohesive unit --OPTIMUM_
 
 topic #34 (0.029): live, watch, don, indonesia, happened, cnn, north, batteries, proof, pingers
 
