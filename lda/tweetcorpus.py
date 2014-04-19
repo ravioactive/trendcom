@@ -43,3 +43,6 @@ class corpus_bow_iter:
 
     def __len__(self):
         return self.len
+
+    def rewind(self):
+        self.corpusIterator.cursor.rewind()

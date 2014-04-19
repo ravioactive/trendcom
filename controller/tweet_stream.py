@@ -60,7 +60,7 @@ def main():
 
     print "Tweet collection for trend ", trend, '...'
 
-    sapi = tweepy.streaming.Stream(auth, MongoStreamListener(trend, globalobjs.db, globalobjs.logfile))
+    sapi = tweepy.streaming.Stream(auth, MongoStreamListener(trend, globalobjs.db, globalobjs.getLogFile()))
     try:
         sapi.filter(track=[trend])
     except(KeyboardInterrupt, SystemExit):

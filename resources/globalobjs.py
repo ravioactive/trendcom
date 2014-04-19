@@ -38,17 +38,19 @@ def init():
     global metapunctpat
     metapunctpat = re.compile('[^a-zA-Z0-9]+')
     global repeatgrp1
+
     repeatgrp1 = re.compile(r"(.)\1{2,}", re.DOTALL)
     global repeatgrp2
     repeatgrp2 = re.compile(r"(..)\1{2,}", re.DOTALL)
     global repeatsubspat
     repeatsubspat = r"\1\1"
+
     global stopwords_list
     stopwords_list = getAllStopwords()
     global slangDict
     # slangDict=getSlangDictionary()
     global logfile
-    logfile = getLogFile()
+    # logfile = getLogFile()
     global ts_beg
     ts_beg = datetime.datetime.now()
 
@@ -78,9 +80,9 @@ def init():
     LDA_MODEL_TYPE = ".lda"
 
     global num_topics_lda
-    num_topics_lda = 200
+    num_topics_lda = 35
     global lda_chunk_size
-    lda_chunk_size = 5000
+    lda_chunk_size = 2000
     global update_freq
     update_freq = 1
     global passes_corpus
@@ -169,6 +171,7 @@ def getSlangDictionary():
 
 
 def getLogFile():
+
     logDir = os.path.join(os.path.join(os.path.abspath(os.path.pardir), 'code'), 'logs')
     stdlogfilename = os.path.join(logDir, 'current.log')
     stdlogfilefound = os.path.isfile(stdlogfilename)
@@ -183,13 +186,14 @@ def getLogFile():
 
         os.rename(stdlogfilename, logfilename)
 
-    currlogFilePath = os.path.join(logDir, stdlogfilename)
-    print "currlogFilePath", currlogFilePath
-    print "stdlogfilename", stdlogfilename
-    print "is current.log still there?", os.path.isfile(stdlogfilename)
+    # currlogFilePath = os.path.join(logDir, stdlogfilename)
+    # print "currlogFilePath", currlogFilePath
+    # print "stdlogfilename", stdlogfilename
+    # print "is current.log still there?", os.path.isfile(stdlogfilename)
     if os.path.isfile(stdlogfilename):
         datetime.datetime.fromtimestamp(os.path.getctime(stdlogfilename)).strftime("%Y-%m-%d-%H-%M-%S")
     f = open(os.path.join(logDir, 'current.log'), "w+")
+
     return f
 
 

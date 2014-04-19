@@ -8,6 +8,7 @@ from resources import globalobjs
 import tweetcorpus
 import operator
 import itertools
+import sys
 import logging
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -17,10 +18,6 @@ globalobjs.init()
 def createBOWCorpus(corpus, dictionary):
     trend_corpus_bow = tweetcorpus.corpus_bow_iter(corpus, dictionary)
     return trend_corpus_bow
-
-
-def freshBOWCorpus(bowcorpus):
-    return tweetcorpus.corpus_bow_iter(bowcorpus)
 
 
 def createCorpus(trend):
@@ -101,12 +98,24 @@ def asTfIdf(corpus):
 
 
 def asLda(corpus, dictionary, numtopics, updatefreq = globalobjs.update_freq, chunksz = 2000, num_passes = globalobjs.passes_corpus):
-    lda = models.ldamodel.LdaModel(corpus = corpus, id2word = dictionary, num_topics = numtopics, chunksize = chunksz, update_every = updatefreq, passes = num_passes)
+    corpus.rewind()
+    lda = models.ldamodel.LdaModel(corpus = list(corpus), id2word = dictionary, num_topics = numtopics, chunksize = chunksz, update_every = updatefreq, passes = num_passes)
     return lda
 
 
-def saveLdaModel(trend, ldamodel):
-    modelName = globalobjs.getLdaObjFileName(trend, globalobjs.MODEL)
+def saveLdaModel(trend, ldamodel, **kwargs):
+    updates, topics, optional, opt_suffix = "", "", "", ""
+    if "updates" in kwargs:
+        updates = kwargs['updates']
+        opt_suffix += "-up" + str(updates)
+    if "topics" in kwargs:
+        topics = kwargs['topics']
+        opt_suffix += "-topics" + str(topics)
+    if "optional" in kwargs:
+        optional = kwargs['optional']
+        opt_suffix += str(optional)
+
+    modelName = globalobjs.getLdaObjFileName(trend + opt_suffix, globalobjs.MODEL)
     if modelName == "":
         return False
 
@@ -126,21 +135,53 @@ def getModelFromFile(name, extn=globalobjs.LDA_MODEL_TYPE):
 
 
 def trainer_new(trend):
-    print "has inited? ", globalobjs.isInit()
+    numtopics = globalobjs.num_topics_lda
+    numupdates = globalobjs.update_freq
+    doc_chunk = globalobjs.lda_chunk_size
+    corpus_passes = globalobjs.passes_corpus
+
+    args = sys.argv[1:]
+    if len(args) >= 1:
+        numtopics = int(args[0])
+        print "Given number of topics:", numtopics
+        if len(args) >= 2:
+            numupdates = int(args[1])
+            print "Given number of updates:", numupdates
+            if len(args) >= 3:
+                doc_chunk = int(args[2])
+                print "Given chunk size:", doc_chunk
+                if len(args) >= 4:
+                    corpus_passes = int(args[3])
+                    print "Given number of passes:", corpus_passes
+                else:
+                    print "Using default number of passes (1)"
+            else:
+                print "Using default chunk size (2000)"
+                print "Using default number of passes (1)"
+        else:
+            print "Using default number of updates (1 - online)"
+            print "Using default chunk size (2000)"
+            print "Using default number of passes (1)"
+    else:
+        print "Using default number of topics (35)"
+        print "Using default number of updates (1 - online)"
+        print "Using default chunk size (2000)"
+        print "Using default number of passes (1)"
+
     trend_corpus = createCorpus(trend)
     trendDict = createDictionary(trend, trend_corpus)
     print trendDict
     bow_corpus = createBOWCorpus(trend_corpus, trendDict)
     saveDictionary(trend, trendDict)
     saveBOWCorpus(trend, bow_corpus)
-    lda_static = asLda(bow_corpus, trendDict, globalobjs.num_topics_lda, 0, 2000, 20)
-    lda_static.print_topics(10, 20)
-    saveLdaModel(trend, lda_static)
 
-    fresh_bow_corpus = freshBOWCorpus(bow_corpus)
-    lda_online = asLda(fresh_bow_corpus, trendDict, globalobjs.num_topics_lda)
-    lda_online.print_topics(10, 20)
-    saveLdaModel(trend, lda_online)
+    lda = asLda(bow_corpus, trendDict, numtopics, numupdates, doc_chunk, corpus_passes)
+    lda.print_topics(numtopics)
+    optStr = "_online_"
+    if numupdates == 0:
+        optStr = "_batch_"
+    saveLdaModel(trend, lda, updates= lda.num_updates, topics = lda.num_topics, optional = optStr)
+
 
 
 def trainer_load(dictFileName, bowCorpusFileName, **kwargs):
