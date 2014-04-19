@@ -19,6 +19,7 @@ prayformh370
 flight370
 mh370qs
 wt20
+malaysiancrash
 
 cont
 http
@@ -35,3 +36,6 @@ gt
 lt
 ll
 lol
+wtf
+hey
+hi
