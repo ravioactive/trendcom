@@ -29,18 +29,20 @@ def addTweet(tweetJSON, trendId, db):
     if not englishOnly(tweetJSON):
         return '[NON-EN]! ' + tweetJSON['text']
 
+    ret = ""
     if isRetweet(tweetJSON):
-        return '[RETWEET] ' + tweetJSON['text']
+        #  return '[RETWEET] ' + tweetJSON['text']
+        ret += '[RETWEET] [PASS]'
 
-    ret = "[TWEET]: "
+    ret += "[TWEET]: "
     tweet = fetchTweet(tweetJSON, trendId, db)
     newtweet = False
     if tweet is None:
         newtweet = True
         tweet = parseTweet(tweetJSON)
-        ret = "[NEW]: "
+        ret += "[NEW]: "
     else:
-        ret = '[DUP]: '
+        ret += '[DUP]: '
 
     pushed = pushTrendInto(tweet, trendId)
     if newtweet or pushed:
@@ -55,6 +57,9 @@ def addUser(tweetJSON, trendId, db):
     user = fetchUser(tweetJSON, trendId, db)
     newuser = False
     ret = "[USER]: "
+    if user is False:
+        ret = "NO USER FOUND"
+        return ret
     if user is None:
         newuser = True
         user = parseUser(tweetJSON)
@@ -231,7 +236,13 @@ def parseUser(tweetJSON):
 
 
 def fetchUser(tweetJSON, trendId, db):
-    userId = tweetJSON['user']['id']
-    users = db.users
-    user = users.find_one({'_id': userId})
+    user = None
+    try:
+        userId = tweetJSON['user']['id']
+        users = db.users
+        user = users.find_one({'_id': userId})
+    except:
+        print "Exception in finding user:"
+        print tweetJSON
+        user = None
     return user
