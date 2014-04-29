@@ -48,7 +48,7 @@ def main():
         print "Tweet collections USAGE: missing \'trend\' argument"
         sys.exit(1)
 
-    trend = sys.argv[1]
+    trend = args[0]
     if not trend or trend == '':
         print "Value for argument \'trend\' is either blank or d.n.e."
         sys.exit(1)
@@ -57,10 +57,9 @@ def main():
 
     keyset = 1
     if len(args) > 1:
-        keyset = args[2]
-        print keyset
+        keyset = int(args[1])
 
-    globalobjs.init()
+    globalobjs.init(keyset)
     auth = tweepy.OAuthHandler(globalobjs.consumer_key, globalobjs.consumer_secret)
     auth.set_access_token(globalobjs.access_token, globalobjs.access_token_secret)
     # api = tweepy.API(auth)

@@ -14,20 +14,17 @@ def init(keyset = 1):
     if isInit():
         return
 
+    if keyset not in keys.keychain:
+        print "Error: Keys " + str(keyset) + " not found in keychain. Using default."
+        keyset = keys.keychain["default"]
     global consumer_key
+    consumer_key = keys.keychain[keyset]["consumer_key"]
     global consumer_secret
+    consumer_secret = keys.keychain[keyset]["consumer_secret"]
     global access_token
+    access_token = keys.keychain[keyset]["access_token"]
     global access_token_secret
-    if keyset == 1:
-        consumer_key = keys.x_consumer_key
-        consumer_secret = keys.x_consumer_secret
-        access_token = keys.x_access_token
-        access_token_secret = keys.x_access_token_secret
-    elif keyset == 2:
-        consumer_key = keys.t_consumer_key
-        consumer_secret = keys.t_consumer_secret
-        access_token = keys.t_access_token
-        access_token_secret = keys.t_access_token_secret
+    access_token_secret = keys.keychain[keyset]["access_token_secret"]
 
     connection_string = "mongodb://localhost"
     connection = pymongo.MongoClient(connection_string)
