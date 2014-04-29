@@ -9,19 +9,25 @@ global inited
 inited = False
 
 
-def init():
+def init(keyset = 1):
 
     if isInit():
         return
 
     global consumer_key
-    consumer_key = keys.x_consumer_key
     global consumer_secret
-    consumer_secret = keys.x_consumer_secret
     global access_token
-    access_token = keys.x_access_token
     global access_token_secret
-    access_token_secret = keys.x_access_token_secret
+    if keyset == 1:
+        consumer_key = keys.x_consumer_key
+        consumer_secret = keys.x_consumer_secret
+        access_token = keys.x_access_token
+        access_token_secret = keys.x_access_token_secret
+    elif keyset == 2:
+        consumer_key = keys.t_consumer_key
+        consumer_secret = keys.t_consumer_secret
+        access_token = keys.t_access_token
+        access_token_secret = keys.t_access_token_secret
 
     connection_string = "mongodb://localhost"
     connection = pymongo.MongoClient(connection_string)
@@ -50,6 +56,7 @@ def init():
     global slangDict
     # slangDict=getSlangDictionary()
     global logfile
+    logfile = None
     # logfile = getLogFile()
     global ts_beg
     ts_beg = datetime.datetime.now()
@@ -170,18 +177,22 @@ def getSlangDictionary():
 
 
 
-def getLogFile():
+def getLogFile(trend = ""):
+    global logfile
+    if logfile is not None:
+        return logfile
 
+    trendLogFileName = trend + "current.log"
     logDir = os.path.join(os.path.join(os.path.abspath(os.path.pardir), 'code'), 'logs')
-    stdlogfilename = os.path.join(logDir, 'current.log')
+    stdlogfilename = os.path.join(logDir, trendLogFileName)
     stdlogfilefound = os.path.isfile(stdlogfilename)
     if(stdlogfilefound):
 
         ts_suffix = datetime.datetime.fromtimestamp(os.path.getctime(stdlogfilename)).strftime("%Y-%m-%d-%H-%M-%S")
-        logfilename = os.path.join(logDir, "log_" + ts_suffix + ".log")
+        logfilename = os.path.join(logDir, "log_" + trend + ts_suffix + ".log")
         i = 1
         while os.path.isfile(logfilename):
-            logfilename = os.path.join(logDir, "log_" + ts_suffix + "_" + str(i) + ".log")
+            logfilename = os.path.join(logDir, "log_" + trend + ts_suffix + "_" + str(i) + ".log")
             i += 1
 
         os.rename(stdlogfilename, logfilename)
@@ -192,8 +203,8 @@ def getLogFile():
     # print "is current.log still there?", os.path.isfile(stdlogfilename)
     if os.path.isfile(stdlogfilename):
         datetime.datetime.fromtimestamp(os.path.getctime(stdlogfilename)).strftime("%Y-%m-%d-%H-%M-%S")
-    f = open(os.path.join(logDir, 'current.log'), "w+")
-
+    f = open(os.path.join(logDir, trendLogFileName), "w+")
+    logfile = f
     return f
 
 

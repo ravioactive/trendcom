@@ -42,11 +42,6 @@ class MongoStreamListener(tweepy.StreamListener):
 
 
 def main():
-    globalobjs.init()
-    auth = tweepy.OAuthHandler(globalobjs.consumer_key, globalobjs.consumer_secret)
-    auth.set_access_token(globalobjs.access_token, globalobjs.access_token_secret)
-    # api = tweepy.API(auth)
-
     args = sys.argv[1:]
 
     if len(args) < 1:
@@ -60,7 +55,17 @@ def main():
 
     print "Tweet collection for trend ", trend, '...'
 
-    sapi = tweepy.streaming.Stream(auth, MongoStreamListener(trend, globalobjs.db, globalobjs.getLogFile()))
+    keyset = 1
+    if len(args) > 1:
+        keyset = args[2]
+        print keyset
+
+    globalobjs.init()
+    auth = tweepy.OAuthHandler(globalobjs.consumer_key, globalobjs.consumer_secret)
+    auth.set_access_token(globalobjs.access_token, globalobjs.access_token_secret)
+    # api = tweepy.API(auth)
+
+    sapi = tweepy.streaming.Stream(auth, MongoStreamListener(trend, globalobjs.db, globalobjs.getLogFile(trend)))
     try:
         sapi.filter(track=[trend])
     except(KeyboardInterrupt, SystemExit):
