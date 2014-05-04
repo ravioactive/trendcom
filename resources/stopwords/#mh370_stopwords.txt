@@ -19,6 +19,8 @@ flight370
 mh370qs
 wt20
 malaysiancrash
+mh370
+malaysiaairlines
 
 cont
 http
