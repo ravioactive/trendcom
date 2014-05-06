@@ -5,6 +5,7 @@ import pymongo
 import datetime
 import keys
 import time
+
 global inited
 inited = False
 
@@ -150,10 +151,15 @@ def getUptime():
 
 
 def getTrendStopWords(trend):
-    trendStopWordsFilePath = os.path.join(os.path.join(os.path.join(os.path.join(os.path.abspath(os.path.pardir), 'code'), 'resources'), 'stopwords'), trend+'_stopwords.txt')
-    f = open(trendStopWordsFilePath, 'r')
-    lines = f.read().splitlines()
-    f.close()
+    lines = []
+    try:
+        trendStopWordsFilePath = os.path.join(os.path.join(os.path.join(os.path.join(os.path.abspath(os.path.pardir), 'code'), 'resources'), 'stopwords'), trend+'_stopwords.txt')
+        f = open(trendStopWordsFilePath, 'r')
+        lines = f.read().splitlines()
+        f.close()
+    except IOError:
+        print "File not found: " + trendStopWordsFilePath
+
     return lines
 
 
