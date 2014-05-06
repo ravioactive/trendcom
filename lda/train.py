@@ -11,6 +11,8 @@ import itertools
 import sys
 import numpy
 import logging
+from datetime import datetime
+from scipy import stats
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 globalobjs.init()
@@ -21,8 +23,8 @@ def createBOWCorpus(corpus, dictionary):
     return trend_corpus_bow
 
 
-def createCorpus(trend):
-    trend_corpus = tweetcorpus.corpus_iter(trend, globalobjs.db)
+def createCorpus(trend, filters = None, limit = None):
+    trend_corpus = tweetcorpus.corpus_iter(trend, globalobjs.db, filters, limit)
     return trend_corpus
 
 
@@ -180,40 +182,43 @@ def trainer_new():
         print "Using default chunk size (2000)"
         print "Using default number of passes (1)"
 
-    # trend_corpus = createCorpus(trend)
-    # trendDict = createDictionary(trend, trend_corpus)
-    # print trendDict
-    # bow_corpus = createBOWCorpus(trend_corpus, trendDict)
-    # # saveDictionary(trend, trendDict)
-    # # saveBOWCorpus(trend, bow_corpus)
-
-    # lda = asLda(bow_corpus, trendDict, numtopics, numupdates, doc_chunk, corpus_passes)
-    # lda.print_topics(numtopics)
-
-    lda = train(trend, numtopics, numupdates, doc_chunk, corpus_passes)
+    start = datetime(2014, 4, 26)
+    filters = {"timestamp": {"$gt": start}}
+    # filters = None
+    lda = train(trend, numtopics, numupdates, doc_chunk, corpus_passes, filters)
     lda.print_topics(numtopics)
 
-    return lda
     all_topics = lda.state.get_lambda()
+    topic = all_topics[0]
+    # prevbestn = []
     for x in xrange(lda.num_topics):
         topic = all_topics[x]
-        print "TOPIC LENGTH: ", len(topic)
+        print "\nTOPIC NUMBER:", x, "TOPIC LENGTH: ", len(topic), "TOPIC TYPE:", type(topic)
         topic = topic / topic.sum()  # normalize to probability dist
-        bestn = numpy.argsort(topic)[::-1][:10]  # top 10 terms
-        bestnprob = [topic[num] for num in bestn]  # top 10 probabilities
-        bestn = [lda.id2word[num] for num in bestn]  # top 10 terms text
-        print "MODEL: ", bestn
-        print "TOPIC: ", bestnprob
+        bestn = numpy.argsort(topic)[::-1][:]  # top 10 terms ids
+
+        bestnprob = [topic[num] for num in bestn[:10]]  # Probabilities for top 10 terms
+        bestnStr = [lda.id2word[num] for num in bestn[:10]]  # top 10 terms text
+        # if x > 0:
+        #     print "KL Divergence: ", getKLDivergence(prevbestn, bestnprob)
+        #     print "JS Divergence:", getJSDivergence(prevbestn, bestnprob)
+        for i in xrange(len(bestnStr)):
+            print str(bestnprob[i]) + "*" + bestnStr[i],
+        # print "MODEL: ", bestn
+        # print "TOPIC: ", bestnprob
+        # prevbestn = bestnprob
 
     # optStr = "_online_"
     # if numupdates == 0:
     #     optStr = "_batch_"
     # saveLdaModel(trend, lda, updates= lda.num_updates, topics = lda.num_topics, optional = optStr)
+    return lda
 
 
-def train(trend, topics, updates, chunksize, passes):
-    trend_corpus = createCorpus(trend)
+def train(trend, topics, updates, chunksize, passes, filters = None, limit = None):
+    trend_corpus = createCorpus(trend, filters, limit)
     trendDict = createDictionary(trend, trend_corpus)
+
     print trendDict
     bow_corpus = createBOWCorpus(trend_corpus, trendDict)
     # saveDictionary(trend, trendDict)
@@ -240,11 +245,25 @@ def compareTrends():
         print "Illeagal value for argument <trend1> or <trend2>"
         sys.exit(1)
 
-    lda1 = train(trend1, numtopics, numupdates, doc_chunk, corpus_passes)
-    lda2 = train(trend2, numtopics, numupdates, doc_chunk, corpus_passes)
+    start = datetime(2014, 4, 26)
+    # filters1 = {"timestamp": {"$gt": start}}
+    filters1 = None
+    lda1 = train(trend1, numtopics, numupdates, doc_chunk, corpus_passes, filters1)
+    print "TOTAL DOCS: ", lda1.state.numdocs
 
-    similarTopics = getSimilarTopics(lda1, lda2)
-    print similarTopics
+    # filters2 = {"timestamp": {"$lt": start}}
+    filters2 = None
+    lda2 = train(trend2, numtopics, numupdates, doc_chunk, corpus_passes, filters2, lda1.state.numdocs)
+    print "TOTAL DOCS: ", lda2.state.numdocs
+
+    similarTopics = getCommonTokens(lda1, lda2)
+    # similarTopics = getSimilarTopics(lda1, lda2)
+    simSum = 0
+    for i in xrange(len(similarTopics)):
+        simSum += similarTopics[i][2]
+        print similarTopics[i]
+    print "Sum of all Kendall Tau:", simSum
+    print "Average Kendall Tau:", simSum/len(similarTopics)
 
 
 def getSimilarTopics(model1, model2):
@@ -252,14 +271,25 @@ def getSimilarTopics(model1, model2):
     # TODO: handle number of topics to compare
     alltopics1 = model1.state.get_lambda()
     alltopics2 = model2.state.get_lambda()
-    for i in xrange(alltopics1.num_topics):
+    if model1.num_topics <= model2.num_topics:
+        minTopics = model1.num_topics
+    else:
+        minTopics = model2.num_topics
+    #for i in xrange(model1.num_topics):
+    for i in xrange(minTopics):
         topic1 = alltopics1[i]
         topic1 = topic1 / topic1.sum()
         alltokens1 = numpy.argsort(topic1)[::-1][:]
         alltokensProbs1 = [topic1[num] for num in alltokens1]
-        minJS = -sys.maxint - 1
+        # print
+        print "Finding similar topic for topic", i
+        tenTokens1Strs = [model1.id2word[num] for num in alltokens1[:10]]
+        print tenTokens1Strs
+
+        minJS = sys.maxint
         minJSidx = 0
-        for j in xrange(alltopics2.num_topics):
+        # for j in xrange(model2.num_topics):
+        for j in xrange(minTopics):
             topic2 = alltopics2[j]
             topic2 = topic2 / topic2.sum()
             alltokens2 = numpy.argsort(topic2)[::-1][:]
@@ -269,6 +299,13 @@ def getSimilarTopics(model1, model2):
                 minJS = jsDiv
                 minJSidx = j
         simTopics.append((i, minJSidx, minJS))  # pushing in to a list of tuples?
+        minJSTopic = alltopics2[minJSidx]
+        minJSTopic = minJSTopic / minJSTopic.sum()
+        # print
+        tenMinJSTokens = numpy.argsort(minJSTopic)[::-1][:10]
+        minJSTokenStrs = [model2.id2word[num] for num in tenMinJSTokens]
+        print minJSTokenStrs
+
     return simTopics
 
 
@@ -279,16 +316,79 @@ def getKLDivergence(dist1, dist2):
 
 # average[x] = weight * p[x] + (1 - weight) * q[x]
 # self.JSD = (weight * self.KL_divergence(array(p), average)) + ((1 - weight) * self.KL_divergence(array(q), average))
+
+
 def getJSDivergence(dist1, dist2):
     weight = 0.5
     p = numpy.asarray(dist1, dtype=numpy.float)
     q = numpy.asarray(dist2, dtype=numpy.float)
-    a = numpy.zeros(len(p))
-    for i in xrange(len(p)):
+    if len(p) <= len(q):
+        normLen = len(p)
+    else:
+        normLen = len(q)
+    p = p[:normLen]
+    q = q[:normLen]
+    a = numpy.zeros(normLen)
+    for i in xrange(normLen):
         a[i] = weight * p[i] + (1 - weight) * q[i]
     jsd = (weight * getKLDivergence(p, a)) + ((1 - weight) * getKLDivergence(q, a))
-    return 1 - jsd/numpy.sqrt(2 * numpy.log10(2))
+    # return 1 - jsd/numpy.sqrt(2 * numpy.log10(2))
+    return jsd
 
+
+def getCommonTokens(model1, model2):
+    simTopics = list()
+    word2id1 = model1.id2word.token2id
+    word2id2 = model2.id2word.token2id
+    common = set(word2id1.keys()) & set(word2id2.keys())
+    print "Number of common Tokens", len(common)
+    alltopics1 = model1.state.get_lambda()
+    alltopics2 = model2.state.get_lambda()
+
+    if model1.num_topics <= model2.num_topics:
+        minTopics = model1.num_topics
+    else:
+        minTopics = model2.num_topics
+    #for i in xrange(model1.num_topics):
+    for i in xrange(minTopics):
+        topic1 = alltopics1[i]
+        topic1 = topic1 / topic1.sum()
+        alltokens1 = numpy.argsort(topic1)[::-1][:]
+        commonIdxs1 = [numpy.where(alltokens1 == model1.id2word.token2id[cmn])[0][0] for cmn in common]
+
+        print "Finding Max. Kendall Tau for topic", i
+        # print list(common)[:25]
+        # print commonIdxs1[:25]
+        # print [model1.id2word[alltokens1[idx]] for idx in commonIdxs1[:25]]
+        tenTokens1Strs = [model1.id2word[num] for num in alltokens1[:10]]
+        print tenTokens1Strs
+
+        maxKT = - sys.maxint - 1
+        maxKTidx = 0
+
+        for j in xrange(minTopics):
+            topic2 = alltopics2[j]
+            topic2 = topic2 / topic2.sum()
+            alltokens2 = numpy.argsort(topic2)[::-1][:]
+            commonIdxs2 = [numpy.where(alltokens2 == model2.id2word.token2id[cmn])[0][0] for cmn in common]
+            # print list(common)[:25]
+            # print commonIdxs2[:25]
+            # print [model2.id2word[alltokens2[idx]] for idx in commonIdxs2[:25]]
+
+            KT, p = stats.kendalltau(commonIdxs1, commonIdxs2)
+            if KT > maxKT:
+                maxKT = KT
+                maxKTidx = j
+
+        simTopics.append((i, maxKTidx, maxKT))
+        maxKTTopic = alltopics2[maxKTidx]
+        maxKTTopic = maxKTTopic / maxKTTopic.sum()
+
+        tenMaxKTTokens = numpy.argsort(maxKTTopic)[::-1][:10]
+        maxKTTokenStrs = [model2.id2word[num] for num in tenMaxKTTokens]
+        print maxKTTokenStrs
+
+    return simTopics
 
 def trainer_load(dictFileName, bowCorpusFileName, **kwargs):
     savedDictionary = getDictionaryFromFile(dictFileName)
@@ -329,4 +429,5 @@ def findKFreq(d, k):
         print k, ":", v
 
 if __name__ == '__main__':
-    trainer_new()
+    # trainer_new()
+    compareTrends()

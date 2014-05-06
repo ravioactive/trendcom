@@ -2,9 +2,9 @@ from model import mongomodel
 
 
 class corpus_iter:
-    def __init__(self, hashtag, db):
+    def __init__(self, hashtag, db, filters = None, limit = None):
         self.hashtag = hashtag
-        self.cursor = mongomodel.getTweetsCursor(hashtag, db)
+        self.cursor = mongomodel.getTweetsCursor(hashtag, db, filters, limit)
 
 
     def __iter__(self):
@@ -13,7 +13,7 @@ class corpus_iter:
 
 
 class corpus_bow_iter:
-    def __init__(self, *args):
+    def __init__(self, *args, **kwargs):
         if len(args) < 1:
             self.corpusIterator = None
             self.dictionary = None
@@ -26,13 +26,25 @@ class corpus_bow_iter:
             else:
                 raise TypeError
         elif len(args) == 2:
-            self.corpusIterator = args[0]
-            self.corpusIterator.cursor.rewind()
-            self.len = self.corpusIterator.cursor.count()
-            self.dictionary = args[1]
+            if isinstance(args[0], corpus_iter):
+                self.corpusIterator = args[0]
+                self.corpusIterator.cursor.rewind()
+                self.len = self.corpusIterator.cursor.count()
+                self.dictionary = args[1]
+            else:
+                raise TypeError
         elif len(args) >= 3:
             # pymongo.database.Database
-            self.corpusIterator = corpus_iter(args[0], args[1])
+            filters = None
+            if "filters" in kwargs:
+                filters = kwargs["filters"]
+            limit = None
+            if "limit" in kwargs:
+                try:
+                    limit = int(kwargs["filters"])
+                except:
+                    limit = None
+            self.corpusIterator = corpus_iter(args[0], args[1], filters, limit)
             self.corpusIterator.cursor.rewind()
             self.len = self.corpusIterator.cursor.count()
             self.dictionary = args[2]
