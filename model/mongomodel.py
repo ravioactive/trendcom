@@ -2,6 +2,7 @@
 import sys
 import streamfilters
 import json
+from datetime import datetime
 # import logger - logging suppport
 
 
@@ -16,7 +17,6 @@ def insertMongo(twitterResponseJSON, trendId, db):
     try:
         ret += "\n\n" + addUser(tweetJSON, trendId, db) + "\n\n" + addTweet(tweetJSON, trendId, db) + "\n\n\n\n\n\n"
     except (KeyboardInterrupt, SystemExit):
-
         raise
     except:
         ret = 'Exception Masked', str(sys.exc_info()[0])
@@ -113,10 +113,23 @@ def fetchTrendId(trend, db):
         return t['trendId']
 
 
-def getTweetsCursor(trend, db):
+def getTweetsCursor(trend, db, filters = None, limit = None):
     tId = fetchTrendId(trend, db)
     tweets = db.tweets
-    cursor = tweets.find({"trends": str(tId)})
+    query = {"trends": str(tId)}
+    if not filters:
+        print "No filter provided. Fetching ALL Tweets."
+    else:
+        query.update(filters)
+
+    cursor = None
+    if not limit or type(limit) is not type(int()):
+        cursor = tweets.find(query)
+    else:
+        cursor = tweets.find(query).limit(limit)
+
+    print "CURSOR QUERY:", query
+    print "CURSOR COUNT:", cursor.count()
     return cursor
 
 
@@ -201,6 +214,8 @@ def parseTweet(tweetJSON):
     else:
         parsedTweet['loc'] = tweetJSON['geo']
     parsedTweet['created_at'] = tweetJSON['created_at']
+    date = datetime.strptime(parsedTweet['created_at'], '%a %b %d %H:%M:%S +0000 %Y')
+    parsedTweet['timestamp'] = date
     parsedTweet['user_id'] = str(tweetJSON['user']['id'])
     # parsedTweet['retweeted'] = tweetJSON['retweeted']
     # parsedTweet['retweeted_id'] = ''
