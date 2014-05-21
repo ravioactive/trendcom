@@ -1,1 +1,1 @@
-__all__ = ["train", "tweetcorpus"]
+__all__ = ["ldamodel", "tweetcorpus", "similarity"]
