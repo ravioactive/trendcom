@@ -3,6 +3,7 @@ import sys
 import streamfilters
 import json
 from datetime import datetime
+import pymongo
 # import logger - logging suppport
 
 
@@ -124,9 +125,9 @@ def getTweetsCursor(trend, db, filters = None, limit = None):
 
     cursor = None
     if not limit or type(limit) is not type(int()):
-        cursor = tweets.find(query)
+        cursor = tweets.find(query).sort('_id', pymongo.ASCENDING)
     else:
-        cursor = tweets.find(query).limit(limit)
+        cursor = tweets.find(query).sort('_id', pymongo.ASCENDING).limit(limit)
 
     print "CURSOR QUERY:", query
     print "CURSOR COUNT:", cursor.count()
